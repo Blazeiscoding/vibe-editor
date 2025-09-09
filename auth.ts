@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import NextAuth from "next-auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
