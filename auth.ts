@@ -3,7 +3,7 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 
 import authConfig from "./auth.config";
 import { db } from "./lib/db";
-import { getAccountByUserId, getUserById } from "@/features/auth/actions";
+import { getAccountByUserId, getUserById } from "./modules/auth/actions";
 
 export const { auth, handlers, signIn, signOut } = NextAuth({
   callbacks: {
@@ -27,7 +27,6 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
             image: user.image,
 
             accounts: {
-              // @ts-ignore
               create: {
                 type: account.type,
                 provider: account.provider,
@@ -70,7 +69,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
               tokenType: account.token_type,
               scope: account.scope,
               idToken: account.id_token,
-              
+
               sessionState: account.session_state,
             },
           });
