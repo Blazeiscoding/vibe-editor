@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import NextAuth from "next-auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 
@@ -33,11 +34,15 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
                 providerAccountId: account.providerAccountId,
                 refreshToken: account.refresh_token,
                 accessToken: account.access_token,
-                expiresAt: account.expires_at,
+                expiresAt: account.expires_at
+                  ? new Date(account.expires_at * 1000)
+                  : null,
                 tokenType: account.token_type,
                 scope: account.scope,
                 idToken: account.id_token,
-                sessionState: account.session_state,
+                sessionState: account.session_state
+                  ? String(account.session_state)
+                  : null,
               },
             },
           },
@@ -65,12 +70,16 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
               providerAccountId: account.providerAccountId,
               refreshToken: account.refresh_token,
               accessToken: account.access_token,
-              expiresAt: account.expires_at,
+              expiresAt: account.expires_at
+                ? new Date(account.expires_at * 1000)
+                : null,
               tokenType: account.token_type,
               scope: account.scope,
               idToken: account.id_token,
 
-              sessionState: account.session_state,
+              sessionState: account.session_state
+                ? String(account.session_state)
+                : null,
             },
           });
         }
@@ -101,7 +110,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
       }
 
       if (token.sub && session.user) {
-        session.user.role = token.role;
+        (session.user as any).role = token.role;
       }
 
       return session;
