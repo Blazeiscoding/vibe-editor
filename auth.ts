@@ -99,6 +99,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
 
       token.name = existingUser.name;
       token.email = existingUser.email;
+      token.image = existingUser.image;
       token.role = existingUser.role;
 
       return token;
@@ -108,9 +109,9 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
       // Attach the user ID from the token to the session
       if (token.sub && session.user) {
         session.user.id = token.sub;
-      }
-
-      if (token.sub && session.user) {
+        session.user.name = token.name as string;
+        session.user.email = token.email as string;
+        session.user.image = token.image as string;
         (session.user as any).role = token.role;
       }
 

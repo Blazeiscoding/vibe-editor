@@ -21,13 +21,21 @@ export function ThemeToggle() {
     <div
       className="cursor-pointer"
       onClick={() => {
-        setTheme(theme === "light" ? "dark" : "light");
+        if (theme === "light") {
+          setTheme("dark");
+        } else if (theme === "dark") {
+          setTheme("system");
+        } else {
+          setTheme("light");
+        }
       }}
     >
       {theme === "light" ? (
-        <Moon className="h-5 w-5 text-black" />
+        <Moon className="h-5 w-5 text-black dark:text-white" />
+      ) : theme === "dark" ? (
+        <Sun className="h-5 w-5 text-white" />
       ) : (
-        <Sun className="h-5 w-5 text-white" color="white" />
+        <SunMoon className="h-5 w-5 text-black dark:text-white" />
       )}
     </div>
   );
