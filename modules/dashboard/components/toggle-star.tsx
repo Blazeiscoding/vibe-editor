@@ -1,7 +1,8 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { toggleStarMarked } from "@/features/playground/actions";
+import { toggleStarMarked } from "@/modules/playground/actions";
+
 import { StarIcon, StarOffIcon } from "lucide-react";
 import type React from "react";
 import { useState, useEffect, forwardRef } from "react";

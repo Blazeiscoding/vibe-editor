@@ -1,37 +1,39 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
+
 import TemplateSelectionModal from "@/components/modal/template-selector-modal";
-import { Button } from "@/components/ui/button"
-import { createPlayground } from "@/features/playground/actions";
-import { Plus } from 'lucide-react'
-import Image from "next/image"
+import { Button } from "@/components/ui/button";
+import { createPlayground } from "@/modules/playground/actions";
+
+import { Plus } from "lucide-react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useState } from "react"
+import { useState } from "react";
 import { toast } from "sonner";
 
 const AddNewButton = () => {
-  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<{
     title: string;
     template: "REACT" | "NEXTJS" | "EXPRESS" | "VUE" | "HONO" | "ANGULAR";
     description?: string;
-  } | null>(null)
-  const router = useRouter()
+  } | null>(null);
+  const router = useRouter();
 
-  const handleSubmit = async(data: {
+  const handleSubmit = async (data: {
     title: string;
     template: "REACT" | "NEXTJS" | "EXPRESS" | "VUE" | "HONO" | "ANGULAR";
     description?: string;
   }) => {
-    setSelectedTemplate(data)
+    setSelectedTemplate(data);
     const res = await createPlayground(data);
     toast("Playground created successfully");
     // Here you would typically handle the creation of a new playground
     // with the selected template data
-    console.log("Creating new playground:", data)
-    setIsModalOpen(false)
-    router.push(`/playground/${res?.id}`)
-  }
+    console.log("Creating new playground:", data);
+    setIsModalOpen(false);
+    router.push(`/playground/${res?.id}`);
+  };
 
   return (
     <>
@@ -49,11 +51,16 @@ const AddNewButton = () => {
             className="flex justify-center items-center bg-white group-hover:bg-[#fff8f8] group-hover:border-[#E93F3F] group-hover:text-[#E93F3F] transition-colors duration-300"
             size={"icon"}
           >
-            <Plus size={30} className="transition-transform duration-300 group-hover:rotate-90" />
+            <Plus
+              size={30}
+              className="transition-transform duration-300 group-hover:rotate-90"
+            />
           </Button>
           <div className="flex flex-col">
             <h1 className="text-xl font-bold text-[#e93f3f]">Add New</h1>
-            <p className="text-sm text-muted-foreground max-w-[220px]">Create a new playground</p>
+            <p className="text-sm text-muted-foreground max-w-[220px]">
+              Create a new playground
+            </p>
           </div>
         </div>
 
@@ -67,14 +74,14 @@ const AddNewButton = () => {
           />
         </div>
       </div>
-      
-      <TemplateSelectionModal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
+
+      <TemplateSelectionModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
         onSubmit={handleSubmit}
       />
     </>
-  )
-}
+  );
+};
 
-export default AddNewButton
+export default AddNewButton;
