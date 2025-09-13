@@ -195,7 +195,7 @@ export const duplicateProjectById = async (id: string) => {
             },
         });
 
-        // Revalidate the dashboard path to reflect the changes
+       
         revalidatePath("/dashboard");
 
         return duplicatedPlayground;
