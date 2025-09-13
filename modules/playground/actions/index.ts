@@ -7,6 +7,7 @@ import { db } from "@/lib/db"
 import { revalidatePath } from "next/cache";
 import { currentUser } from "@/modules/auth/actions";
 import { TemplateFolder } from "../libs/path-to-json";
+import { InputJsonValue } from "@prisma/client/runtime/library";
 
 
 // Toggle marked status for a problem
@@ -187,10 +188,12 @@ export const duplicateProjectById = async (id: string) => {
                 template: originalPlayground.template,
                 userId: originalPlayground.userId,
                 templateFiles: {
-                 
-                    create: originalPlayground.templateFiles.map((file) => ({
-                        content: file.content,
-                    })),
+                    create: originalPlayground.templateFiles
+                        .filter((file): file is typeof file => 
+                            file.content !== null)
+                        .map((file) => ({
+                            content: file.content as InputJsonValue,
+                        })),
                 },
             },
         });
