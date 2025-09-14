@@ -24,7 +24,6 @@ export const MarkedToggleButton = forwardRef<
   }, [markedForRevision]);
 
   const handleToggle = async (event: React.MouseEvent<HTMLButtonElement>) => {
-    // Call the original onClick if provided by the parent (DropdownMenuItem)
     onClick?.(event);
 
     const newMarkedState = !isMarked;
