@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable react/no-unescaped-entities */
 "use client";
 
 import Image from "next/image";
@@ -55,8 +53,7 @@ import {
   Eye,
 } from "lucide-react";
 import { toast } from "sonner";
-import { MarkedToggleButton } from "@/features/dashboard/components/toggle-star";
-
+import { MarkedToggleButton } from "./toggle-star";
 
 interface ProjectTableProps {
   projects: Project[];
@@ -241,9 +238,7 @@ export default function ProjectTable({
                     <DropdownMenuContent align="end" className="w-48">
                       <DropdownMenuItem asChild>
                         <MarkedToggleButton
-                          markedForRevision={
-                            project.Starmark?.[0]?.isMarked || false
-                          }
+                          markedForRevision={project.Starmark[0]?.isMarked}
                           id={project.id}
                         />
                       </DropdownMenuItem>
