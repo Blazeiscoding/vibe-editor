@@ -1,13 +1,9 @@
 /* eslint-disable @next/next/no-img-element */
 
-
-
-
-import { getAllPlaygroundForUser } from "@/modules/dashboard/actions";
-import AddNewButton from "@/modules/dashboard/components/add-new-btn";
-import AddRepo from "@/modules/dashboard/components/add-repo";
-import ProjectTable from "@/modules/dashboard/components/project-table";
-import { deleteProjectById, duplicateProjectById, editProjectById } from "@/modules/playground/actions";
+import AddNewButton from "@/features/dashboard/components/add-new-btn";
+import AddRepo from "@/features/dashboard/components/add-repo";
+import ProjectTable from "@/features/dashboard/components/project-table";
+import { deleteProjectById, duplicateProjectById, editProjectById, getAllPlaygroundForUser } from "@/features/playground/actions";
 
 const EmptyState = () => (
   <div className="flex flex-col items-center justify-center py-16">
@@ -30,7 +26,6 @@ const DashboardMainPage = async () => {
         {playgrounds && playgrounds.length === 0 ? (
           <EmptyState />
         ) : (
-
           <ProjectTable
             projects={playgrounds || []}
             onDeleteProject={deleteProjectById}

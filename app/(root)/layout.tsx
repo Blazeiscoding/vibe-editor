@@ -1,6 +1,7 @@
+import { Footer } from "@/features/home/footer";
+import { Header } from "@/features/home/header";
 import { cn } from "@/lib/utils";
-import { Footer } from "@/modules/home/footer";
-import { Header } from "@/modules/home/header";
+
 import type { Metadata } from "next";
 // import { usePathname } from "next/navigation";
 

@@ -1,7 +1,6 @@
 import { SidebarProvider } from "@/components/ui/sidebar";
-
-import { getAllPlaygroundForUser } from "@/modules/dashboard/actions";
-import { DashboardSidebar } from "@/modules/dashboard/components/dashboard-sidebar";
+import { DashboardSidebar } from "@/features/dashboard/dashboard-sidebar";
+import { getAllPlaygroundForUser } from "@/features/playground/actions";
 
 import type React from "react";
 
