@@ -63,7 +63,7 @@ export async function GET(
         { status: 500 }
       );
     }
-
+  
     await fs.unlink(outputFile);
 
     return Response.json(
