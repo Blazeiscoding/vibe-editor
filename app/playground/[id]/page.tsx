@@ -97,7 +97,9 @@ const MainPlaygroundPage: React.FC = () => {
     error: containerError,
     instance,
     writeFileSync,
-  } = useWebContainer({ templateData: templateData || { folderName: "", items: [] } });
+  } = useWebContainer({
+    templateData: templateData || { folderName: "", items: [] },
+  });
 
   const lastSyncedContent = useRef<Map<string, string>>(new Map());
 
@@ -178,8 +180,8 @@ const MainPlaygroundPage: React.FC = () => {
     [handleRenameFolder, saveTemplateData]
   );
 
-  const activeFile = openFiles.find((file: { id: any; }) => file.id === activeFileId);
-  const hasUnsavedChanges = openFiles.some((file: { hasUnsavedChanges: any; }) => file.hasUnsavedChanges);
+  const activeFile = openFiles.find((file) => file.id === activeFileId);
+  const hasUnsavedChanges = openFiles.some((file) => file.hasUnsavedChanges);
 
   const handleFileSelect = (file: TemplateFile) => {
     openFile(file);
@@ -190,7 +192,7 @@ const MainPlaygroundPage: React.FC = () => {
       const targetFileId = fileId || activeFileId;
       if (!targetFileId) return;
 
-      const fileToSave = openFiles.find((f: { id: any; }) => f.id === targetFileId);
+      const fileToSave = openFiles.find((f) => f.id === targetFileId);
       if (!fileToSave) return;
 
       const latestTemplateData = useFileExplorer.getState().templateData;
@@ -239,7 +241,7 @@ const MainPlaygroundPage: React.FC = () => {
         setTemplateData(updatedTemplateData);
 
         // Update open files
-        const updatedOpenFiles = openFiles.map((f: { id: any; }) =>
+        const updatedOpenFiles = openFiles.map((f) =>
           f.id === targetFileId
             ? {
                 ...f,
@@ -274,7 +276,7 @@ const MainPlaygroundPage: React.FC = () => {
   );
 
   const handleSaveAll = async () => {
-    const unsavedFiles = openFiles.filter((f: { hasUnsavedChanges: any; }) => f.hasUnsavedChanges);
+    const unsavedFiles = openFiles.filter((f) => f.hasUnsavedChanges);
 
     if (unsavedFiles.length === 0) {
       toast.info("No unsaved changes");
@@ -282,7 +284,7 @@ const MainPlaygroundPage: React.FC = () => {
     }
 
     try {
-      await Promise.all(unsavedFiles.map((f: { id: string | undefined; }) => handleSave(f.id)));
+      await Promise.all(unsavedFiles.map((f) => handleSave(f.id)));
       toast.success(`Saved ${unsavedFiles.length} file(s)`);
     } catch (error) {
       toast.error("Failed to save some files");
@@ -458,7 +460,7 @@ const MainPlaygroundPage: React.FC = () => {
                   >
                     <div className="flex items-center justify-between px-4 py-2">
                       <TabsList className="h-8 bg-transparent p-0">
-                        {openFiles.map((file: { id: React.Key | null | undefined; filename: string | number | bigint | boolean | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | Promise<string | number | bigint | boolean | React.ReactPortal | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | null | undefined> | null | undefined; fileExtension: string | number | bigint | boolean | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | Promise<string | number | bigint | boolean | React.ReactPortal | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | null | undefined> | null | undefined; hasUnsavedChanges: any; }) => (
+                        {openFiles.map((file) => (
                           <TabsTrigger
                             key={file.id}
                             value={String(file.id)}

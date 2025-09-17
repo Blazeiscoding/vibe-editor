@@ -1,3 +1,5 @@
+/* eslint-disable @next/next/no-img-element */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client"
 
 import type React from "react"
@@ -90,13 +92,19 @@ export const AISettingsDropdown: React.FC<AISettingsDropdownProps> = ({
               Code completions
               <span className="text-xs text-gray-600 dark:text-gray-400">{codeCompletionsUsage}%</span>
             </div>
-            <Progress value={codeCompletionsUsage} className="h-1.5 mb-3" indicatorColor="bg-blue-500" />
+            <Progress 
+              value={codeCompletionsUsage} 
+              className="h-1.5 mb-3 [&>div]:bg-blue-500" 
+            />
 
             <div className="text-sm font-medium flex items-center justify-between mb-1">
               Chat messages
               <span className="text-xs text-gray-600 dark:text-gray-400">{chatMessagesUsage}%</span>
             </div>
-            <Progress value={chatMessagesUsage} className="h-1.5 mb-3" indicatorColor="bg-blue-500" />
+            <Progress 
+              value={chatMessagesUsage} 
+              className="h-1.5 mb-3 [&>div]:bg-blue-500" 
+            />
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">Allowance resets {allowanceResetDate}.</p>
           </div>
 
