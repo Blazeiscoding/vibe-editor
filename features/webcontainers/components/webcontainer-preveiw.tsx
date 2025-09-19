@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import React, { useEffect, useState, useRef } from "react";
@@ -40,7 +43,7 @@ const WebContainerPreview: React.FC<WebContainerPreviewProps> = ({
   const [setupError, setSetupError] = useState<string | null>(null);
   const [isSetupComplete, setIsSetupComplete] = useState(false);
   const [isSetupInProgress, setIsSetupInProgress] = useState(false);
-  
+
   // Ref to access terminal methods
   const terminalRef = useRef<any>(null);
 
@@ -69,21 +72,28 @@ const WebContainerPreview: React.FC<WebContainerPreviewProps> = ({
       try {
         setIsSetupInProgress(true);
         setSetupError(null);
-        
+
         // Check if server is already running by testing if files are already mounted
         try {
-          const packageJsonExists = await instance.fs.readFile('package.json', 'utf8');
+          const packageJsonExists = await instance.fs.readFile(
+            "package.json",
+            "utf8"
+          );
           if (packageJsonExists) {
             // Files are already mounted, just reconnect to existing server
             if (terminalRef.current?.writeToTerminal) {
-              terminalRef.current.writeToTerminal("🔄 Reconnecting to existing WebContainer session...\r\n");
+              terminalRef.current.writeToTerminal(
+                "🔄 Reconnecting to existing WebContainer session...\r\n"
+              );
             }
-            
+
             // Check if server is already running
             instance.on("server-ready", (port: number, url: string) => {
               console.log(`Reconnected to server on port ${port} at ${url}`);
               if (terminalRef.current?.writeToTerminal) {
-                terminalRef.current.writeToTerminal(`🌐 Reconnected to server at ${url}\r\n`);
+                terminalRef.current.writeToTerminal(
+                  `🌐 Reconnected to server at ${url}\r\n`
+                );
               }
               setPreviewUrl(url);
               setLoadingState((prev) => ({
@@ -94,7 +104,7 @@ const WebContainerPreview: React.FC<WebContainerPreviewProps> = ({
               setIsSetupComplete(true);
               setIsSetupInProgress(false);
             });
-            
+
             setCurrentStep(4);
             setLoadingState((prev) => ({ ...prev, starting: true }));
             return;
@@ -102,14 +112,16 @@ const WebContainerPreview: React.FC<WebContainerPreviewProps> = ({
         } catch (e) {
           // Files don't exist, proceed with normal setup
         }
-        
+
         // Step 1: Transform data
         setLoadingState((prev) => ({ ...prev, transforming: true }));
         setCurrentStep(1);
-        
+
         // Write to terminal
         if (terminalRef.current?.writeToTerminal) {
-          terminalRef.current.writeToTerminal("🔄 Transforming template data...\r\n");
+          terminalRef.current.writeToTerminal(
+            "🔄 Transforming template data...\r\n"
+          );
         }
 
         // @ts-ignore
@@ -124,13 +136,17 @@ const WebContainerPreview: React.FC<WebContainerPreviewProps> = ({
 
         // Step 2: Mount files
         if (terminalRef.current?.writeToTerminal) {
-          terminalRef.current.writeToTerminal("📁 Mounting files to WebContainer...\r\n");
+          terminalRef.current.writeToTerminal(
+            "📁 Mounting files to WebContainer...\r\n"
+          );
         }
-        
+
         await instance.mount(files);
-        
+
         if (terminalRef.current?.writeToTerminal) {
-          terminalRef.current.writeToTerminal("✅ Files mounted successfully\r\n");
+          terminalRef.current.writeToTerminal(
+            "✅ Files mounted successfully\r\n"
+          );
         }
 
         setLoadingState((prev) => ({
@@ -140,33 +156,125 @@ const WebContainerPreview: React.FC<WebContainerPreviewProps> = ({
         }));
         setCurrentStep(3);
 
-        // Step 3: Install dependencies
-        if (terminalRef.current?.writeToTerminal) {
-          terminalRef.current.writeToTerminal("📦 Installing dependencies...\r\n");
+        // Step 3: Install dependencies (skip if node_modules exists)
+        let shouldInstall = true;
+        try {
+          await instance.fs.readdir("node_modules");
+          shouldInstall = false;
+          if (terminalRef.current?.writeToTerminal) {
+            terminalRef.current.writeToTerminal(
+              "⏭️ Skipping install (node_modules exists)\r\n"
+            );
+          }
+        } catch {}
+
+        // Determine if there are any dependencies at all
+        let hasDependencies = true;
+        let hasLockfile = false;
+        try {
+          const pkgRaw = await instance.fs.readFile("package.json", "utf8");
+          const pkg = JSON.parse(pkgRaw);
+          const deps = Object.keys(pkg.dependencies || {});
+          const devDeps = Object.keys(pkg.devDependencies || {});
+          hasDependencies = deps.length > 0 || devDeps.length > 0;
+        } catch {
+          hasDependencies = false;
         }
-        
-        const installProcess = await instance.spawn("npm", ["install"]);
-
-        // Stream install output to terminal
-        installProcess.output.pipeTo(
-          new WritableStream({
-            write(data) {
-              // Write directly to terminal
-              if (terminalRef.current?.writeToTerminal) {
-                terminalRef.current.writeToTerminal(data);
-              }
-            },
-          })
-        );
-
-        const installExitCode = await installProcess.exit;
-
-        if (installExitCode !== 0) {
-          throw new Error(`Failed to install dependencies. Exit code: ${installExitCode}`);
+        try {
+          await instance.fs.readFile("package-lock.json", "utf8");
+          hasLockfile = true;
+        } catch {
+          hasLockfile = false;
         }
 
-        if (terminalRef.current?.writeToTerminal) {
-          terminalRef.current.writeToTerminal("✅ Dependencies installed successfully\r\n");
+        if (shouldInstall && hasDependencies) {
+          if (terminalRef.current?.writeToTerminal) {
+            terminalRef.current.writeToTerminal(
+              `📦 Installing dependencies using ${
+                hasLockfile ? "npm ci" : "npm install"
+              }...\r\n`
+            );
+          }
+
+          // Prefer npm ci when lockfile exists
+          const primaryArgs = hasLockfile
+            ? [
+                "ci",
+                "--prefer-offline",
+                "--no-audit",
+                "--fund=false",
+                "--loglevel=warn",
+                "--omit=optional",
+              ]
+            : [
+                "install",
+                "--prefer-offline",
+                "--no-audit",
+                "--fund=false",
+                "--loglevel=warn",
+                "--legacy-peer-deps",
+                "--omit=optional",
+              ];
+
+          const runInstall = async (args: string[]) => {
+            const proc = await instance.spawn("npm", args, {
+              env: {
+                CI: "true",
+                NEXT_TELEMETRY_DISABLED: "1",
+                PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
+                npm_config_audit: "false",
+                npm_config_fund: "false",
+              },
+            } as any);
+            proc.output.pipeTo(
+              new WritableStream({
+                write(data) {
+                  if (terminalRef.current?.writeToTerminal) {
+                    terminalRef.current.writeToTerminal(data);
+                  }
+                },
+              })
+            );
+            return await proc.exit;
+          };
+
+          let exitCode = await runInstall(primaryArgs);
+
+          // Fallback: if ci failed, try a regular install
+          if (exitCode !== 0 && hasLockfile) {
+            if (terminalRef.current?.writeToTerminal) {
+              terminalRef.current.writeToTerminal(
+                "↩️ npm ci failed, retrying with npm install --legacy-peer-deps...\r\n"
+              );
+            }
+            exitCode = await runInstall([
+              "install",
+              "--prefer-offline",
+              "--no-audit",
+              "--fund=false",
+              "--loglevel=warn",
+              "--legacy-peer-deps",
+              "--omit=optional",
+            ]);
+          }
+
+          if (exitCode !== 0) {
+            throw new Error(
+              `Failed to install dependencies. Exit code: ${exitCode}`
+            );
+          }
+
+          if (terminalRef.current?.writeToTerminal) {
+            terminalRef.current.writeToTerminal(
+              "✅ Dependencies installed successfully\r\n"
+            );
+          }
+        } else if (shouldInstall && !hasDependencies) {
+          if (terminalRef.current?.writeToTerminal) {
+            terminalRef.current.writeToTerminal(
+              "⏭️ Skipping install (no dependencies found)\r\n"
+            );
+          }
         }
 
         setLoadingState((prev) => ({
@@ -176,18 +284,48 @@ const WebContainerPreview: React.FC<WebContainerPreviewProps> = ({
         }));
         setCurrentStep(4);
 
-        // Step 4: Start the server
+        // Step 4: Start the server (prefer dev script if available)
         if (terminalRef.current?.writeToTerminal) {
-          terminalRef.current.writeToTerminal("🚀 Starting development server...\r\n");
+          terminalRef.current.writeToTerminal(
+            "🚀 Starting development server...\r\n"
+          );
         }
-        
-        const startProcess = await instance.spawn("npm", ["run", "start"]);
+
+        let scriptToRun = "start";
+        try {
+          const pkgRaw = await instance.fs.readFile("package.json", "utf8");
+          const pkg = JSON.parse(pkgRaw);
+          if (pkg?.scripts?.dev) {
+            scriptToRun = "dev";
+            if (terminalRef.current?.writeToTerminal) {
+              terminalRef.current.writeToTerminal(
+                "⚙️ Using `npm run dev` for faster startup\r\n"
+              );
+            }
+          }
+        } catch {}
+
+        const startProcess = await instance.spawn(
+          "npm",
+          ["run", scriptToRun, "--silent"],
+          {
+            env: {
+              PORT: "5173",
+              HOST: "0.0.0.0",
+              BROWSER: "none",
+              NEXT_TELEMETRY_DISABLED: "1",
+              CHOKIDAR_USEPOLLING: "false",
+            },
+          } as any
+        );
 
         // Listen for server ready event
         instance.on("server-ready", (port: number, url: string) => {
           console.log(`Server ready on port ${port} at ${url}`);
           if (terminalRef.current?.writeToTerminal) {
-            terminalRef.current.writeToTerminal(`🌐 Server ready at ${url}\r\n`);
+            terminalRef.current.writeToTerminal(
+              `🌐 Server ready at ${url}\r\n`
+            );
           }
           setPreviewUrl(url);
           setLoadingState((prev) => ({
@@ -209,15 +347,14 @@ const WebContainerPreview: React.FC<WebContainerPreviewProps> = ({
             },
           })
         );
-
       } catch (err) {
         console.error("Error setting up container:", err);
         const errorMessage = err instanceof Error ? err.message : String(err);
-        
+
         if (terminalRef.current?.writeToTerminal) {
           terminalRef.current.writeToTerminal(`❌ Error: ${errorMessage}\r\n`);
         }
-        
+
         setSetupError(errorMessage);
         setIsSetupInProgress(false);
         setLoadingState({
@@ -282,13 +419,17 @@ const WebContainerPreview: React.FC<WebContainerPreviewProps> = ({
   const getStepText = (stepIndex: number, label: string) => {
     const isActive = stepIndex === currentStep;
     const isComplete = stepIndex < currentStep;
-    
+
     return (
-      <span className={`text-sm font-medium ${
-        isComplete ? 'text-green-600' : 
-        isActive ? 'text-blue-600' : 
-        'text-gray-500'
-      }`}>
+      <span
+        className={`text-sm font-medium ${
+          isComplete
+            ? "text-green-600"
+            : isActive
+            ? "text-blue-600"
+            : "text-gray-500"
+        }`}
+      >
         {label}
       </span>
     );
@@ -299,8 +440,6 @@ const WebContainerPreview: React.FC<WebContainerPreviewProps> = ({
       {!previewUrl ? (
         <div className="h-full flex flex-col">
           <div className="w-full max-w-md p-6 m-5 rounded-lg bg-white dark:bg-zinc-800 shadow-sm mx-auto">
-           
-
             <Progress
               value={(currentStep / totalSteps) * 100}
               className="h-2 mb-6"
@@ -328,7 +467,7 @@ const WebContainerPreview: React.FC<WebContainerPreviewProps> = ({
 
           {/* Terminal */}
           <div className="flex-1 p-4">
-            <TerminalComponent 
+            <TerminalComponent
               ref={terminalRef}
               webContainerInstance={instance}
               theme="dark"
@@ -346,10 +485,10 @@ const WebContainerPreview: React.FC<WebContainerPreviewProps> = ({
               title="WebContainer Preview"
             />
           </div>
-          
+
           {/* Terminal at bottom when preview is ready */}
           <div className="h-64 border-t">
-            <TerminalComponent 
+            <TerminalComponent
               ref={terminalRef}
               webContainerInstance={instance}
               theme="dark"
