@@ -1,6 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useRef, useEffect, useCallback } from "react";
+import dynamic from "next/dynamic";
 
 import {
   configureMonaco,
@@ -8,7 +10,21 @@ import {
   getEditorLanguage,
 } from "@/features/playground/libs/editor-config";
 import type { TemplateFile } from "@/features/playground/libs/path-to-json";
-import { editor as Editor } from "monaco-editor";
+
+// Dynamically import Monaco Editor with no SSR
+const MonacoEditor = dynamic(() => import("@monaco-editor/react"), {
+  ssr: false,
+  loading: () => (
+    <div className="h-full flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+      <div className="text-center">
+        <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+        <p className="text-sm text-gray-600 dark:text-gray-400">
+          Loading editor...
+        </p>
+      </div>
+    </div>
+  ),
+});
 
 interface PlaygroundEditorProps {
   activeFile: TemplateFile | undefined;
@@ -34,7 +50,7 @@ export const PlaygroundEditor = ({
   onTriggerSuggestion,
 }: PlaygroundEditorProps) => {
   const editorRef = useRef<any>(null);
-  const monacoRef = useRef<Monaco | null>(null);
+  const monacoRef = useRef<any>(null);
   const inlineCompletionProviderRef = useRef<any>(null);
   const currentSuggestionRef = useRef<{
     text: string;
@@ -52,7 +68,7 @@ export const PlaygroundEditor = ({
 
   // Create inline completion provider
   const createInlineCompletionProvider = useCallback(
-    (monaco: Monaco) => {
+    (monaco: any) => {
       return {
         provideInlineCompletions: async (
           model: any,
@@ -353,7 +369,7 @@ export const PlaygroundEditor = ({
     createInlineCompletionProvider,
   ]);
 
-  const handleEditorDidMount = (editor: any, monaco: Monaco) => {
+  const handleEditorDidMount = (editor: any, monaco: any) => {
     editorRef.current = editor;
     monacoRef.current = monaco;
     console.log("Editor instance mounted:", !!editorRef.current);
@@ -599,10 +615,10 @@ export const PlaygroundEditor = ({
         </div>
       )}
 
-      <Editor
+      <MonacoEditor
         height="100%"
         value={content}
-        onChange={(value) => onContentChange(value || "")}
+        onChange={(value: any) => onContentChange(value || "")}
         onMount={handleEditorDidMount}
         language={
           activeFile

@@ -11,11 +11,7 @@ import React, {
   forwardRef,
   useImperativeHandle,
 } from "react";
-import { Terminal } from "@xterm/xterm";
-import { FitAddon } from "@xterm/addon-fit";
-import { SearchAddon } from "@xterm/addon-search";
-import { WebLinksAddon } from "@xterm/addon-web-links";
-import "xterm/css/xterm.css";
+import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Copy, Trash2, Download } from "lucide-react";
@@ -41,12 +37,13 @@ const TerminalComponent = forwardRef<TerminalRef, TerminalProps>(
     ref
   ) => {
     const terminalRef = useRef<HTMLDivElement>(null);
-    const term = useRef<Terminal | null>(null);
-    const fitAddon = useRef<FitAddon | null>(null);
-    const searchAddon = useRef<SearchAddon | null>(null);
+    const term = useRef<any>(null);
+    const fitAddon = useRef<any>(null);
+    const searchAddon = useRef<any>(null);
     const [isConnected, setIsConnected] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
     const [showSearch, setShowSearch] = useState(false);
+    const [isClient, setIsClient] = useState(false);
 
     // Command line state
     const currentLine = useRef<string>("");
@@ -298,52 +295,65 @@ const TerminalComponent = forwardRef<TerminalRef, TerminalProps>(
       [executeCommand, writePrompt]
     );
 
-    const initializeTerminal = useCallback(() => {
-      if (!terminalRef.current || term.current) return;
+    const initializeTerminal = useCallback(async () => {
+      if (!terminalRef.current || term.current || !isClient) return;
 
-      const terminal = new Terminal({
-        cursorBlink: true,
-        fontFamily: '"Fira Code", "JetBrains Mono", "Consolas", monospace',
-        fontSize: 14,
-        lineHeight: 1.2,
-        letterSpacing: 0,
-        theme: terminalThemes[theme],
-        allowTransparency: false,
-        convertEol: true,
-        scrollback: 1000,
-        tabStopWidth: 4,
-      });
+      try {
+        // Dynamically import xterm modules only on the client
+        const { Terminal } = await import("@xterm/xterm");
+        const { FitAddon } = await import("@xterm/addon-fit");
+        const { SearchAddon } = await import("@xterm/addon-search");
+        const { WebLinksAddon } = await import("@xterm/addon-web-links");
 
-      // Add addons
-      const fitAddonInstance = new FitAddon();
-      const webLinksAddon = new WebLinksAddon();
-      const searchAddonInstance = new SearchAddon();
+        // Import CSS dynamically
+        await import("xterm/css/xterm.css");
 
-      terminal.loadAddon(fitAddonInstance);
-      terminal.loadAddon(webLinksAddon);
-      terminal.loadAddon(searchAddonInstance);
+        const terminal = new Terminal({
+          cursorBlink: true,
+          fontFamily: '"Fira Code", "JetBrains Mono", "Consolas", monospace',
+          fontSize: 14,
+          lineHeight: 1.2,
+          letterSpacing: 0,
+          theme: terminalThemes[theme],
+          allowTransparency: false,
+          convertEol: true,
+          scrollback: 1000,
+          tabStopWidth: 4,
+        });
 
-      terminal.open(terminalRef.current);
+        // Add addons
+        const fitAddonInstance = new FitAddon();
+        const webLinksAddon = new WebLinksAddon();
+        const searchAddonInstance = new SearchAddon();
 
-      fitAddon.current = fitAddonInstance;
-      searchAddon.current = searchAddonInstance;
-      term.current = terminal;
+        terminal.loadAddon(fitAddonInstance);
+        terminal.loadAddon(webLinksAddon);
+        terminal.loadAddon(searchAddonInstance);
 
-      // Handle terminal input
-      terminal.onData(handleTerminalInput);
+        terminal.open(terminalRef.current);
 
-      // Initial fit
-      setTimeout(() => {
-        fitAddonInstance.fit();
-      }, 100);
+        fitAddon.current = fitAddonInstance;
+        searchAddon.current = searchAddonInstance;
+        term.current = terminal;
 
-      // Welcome message
-      terminal.writeln("🚀 WebContainer Terminal");
-      terminal.writeln("Type 'help' for available commands");
-      writePrompt();
+        // Handle terminal input
+        terminal.onData(handleTerminalInput);
 
-      return terminal;
-    }, [theme, handleTerminalInput, writePrompt]);
+        // Initial fit
+        setTimeout(() => {
+          fitAddonInstance.fit();
+        }, 100);
+
+        // Welcome message
+        terminal.writeln("🚀 WebContainer Terminal");
+        terminal.writeln("Type 'help' for available commands");
+        writePrompt();
+
+        return terminal;
+      } catch (error) {
+        console.error("Failed to initialize terminal:", error);
+      }
+    }, [theme, handleTerminalInput, writePrompt, isClient]);
 
     const connectToWebContainer = useCallback(async () => {
       if (!webContainerInstance || !term.current) return;
@@ -411,8 +421,15 @@ const TerminalComponent = forwardRef<TerminalRef, TerminalProps>(
       }
     }, []);
 
+    // Check if we're on the client side
     useEffect(() => {
-      initializeTerminal();
+      setIsClient(true);
+    }, []);
+
+    useEffect(() => {
+      if (isClient) {
+        initializeTerminal();
+      }
 
       // Handle resize
       const resizeObserver = new ResizeObserver(() => {
@@ -440,13 +457,29 @@ const TerminalComponent = forwardRef<TerminalRef, TerminalProps>(
           term.current = null;
         }
       };
-    }, [initializeTerminal]);
+    }, [initializeTerminal, isClient]);
 
     useEffect(() => {
       if (webContainerInstance && term.current && !isConnected) {
         connectToWebContainer();
       }
     }, [webContainerInstance, connectToWebContainer, isConnected]);
+
+    // Show loading state while client-side rendering
+    if (!isClient) {
+      return (
+        <div
+          className={cn(
+            "flex flex-col h-full bg-background border rounded-lg overflow-hidden",
+            className
+          )}
+        >
+          <div className="flex items-center justify-center h-full">
+            <div className="text-muted-foreground">Loading terminal...</div>
+          </div>
+        </div>
+      );
+    }
 
     return (
       <div

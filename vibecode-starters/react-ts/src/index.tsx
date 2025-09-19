@@ -7,6 +7,6 @@ const root = createRoot(document.getElementById('app'));
 
 root.render(
   <StrictMode>
-    <App name="StackBlitz" />
+    <App name="Anya" />
   </StrictMode>
 );
