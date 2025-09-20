@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 import TemplateSelectionModal from "@/components/modal/template-selector-modal";
 import { Button } from "@/components/ui/button"

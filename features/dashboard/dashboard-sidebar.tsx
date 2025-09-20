@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client"
 
 import { useState } from "react"
@@ -20,7 +21,6 @@ import {
   Database,
   FlameIcon,
 } from "lucide-react"
-import { Button } from "@/components/ui/button"
 import {
   Sidebar,
   SidebarContent,

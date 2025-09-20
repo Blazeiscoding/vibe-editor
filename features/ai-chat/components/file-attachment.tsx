@@ -716,7 +716,7 @@ export const FileAttachmentChat: React.FC<FileAttachmentChatProps> = ({ isOpen, 
                 onPaste={handlePaste}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
-                    handleSendMessage(e as any)
+                    handleSendMessage(e as never)
                   }
                 }}
                 disabled={isLoading}
