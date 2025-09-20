@@ -110,24 +110,24 @@ Visit `http://localhost:3000` in your browser.
 
 ## 🎯 Keyboard Shortcuts
 
-* `Ctrl + Space` or `Double Enter`: Trigger AI suggestions
-* `Tab`: Accept AI suggestion
-* `/`: Open Command Palette (if implemented)
+- `Ctrl + Space` or `Double Enter`: Trigger AI suggestions
+- `Tab`: Accept AI suggestion
+- `/`: Open Command Palette (if implemented)
 
 ---
 
 ## ✅ Roadmap
 
-* [x] Google & GitHub Auth via NextAuth
-* [x] Multiple stack templates
-* [x] Monaco Editor + AI
-* [x] WebContainers + terminal
-* [x] AI chat for code assistance
-* [ ] GitHub repo import/export
-* [ ] Save/load playground from DB
-* [ ] Real-time collaboration
-* [ ] Plugin system for templates/tools
-* [ ] One-click deploy via Vercel/Netlify
+- [x] Google & GitHub Auth via NextAuth
+- [x] Multiple stack templates
+- [x] Monaco Editor + AI
+- [x] WebContainers + terminal  
+- [x] AI chat for code assistance
+- [ ] GitHub repo import/export
+- [ ] Save/load playground from DB
+- [ ] Real-time collaboration
+- [ ] Plugin system for templates/tools
+- [ ] One-click deploy via Vercel/Netlify
 
 ---
 
@@ -139,10 +139,10 @@ This project is licensed under the [MIT License](LICENSE).
 
 ## 🙏 Acknowledgements
 
-* [Monaco Editor](https://microsoft.github.io/monaco-editor/)
-* [Ollama](https://ollama.com/) – for offline LLMs
-* [WebContainers](https://webcontainers.io/)
-* [xterm.js](https://xtermjs.org/)
-* [NextAuth.js](https://next-auth.js.org/)
+- [Monaco Editor](https://microsoft.github.io/monaco-editor/)
+- [Ollama](https://ollama.com/) – for offline LLMs
+- [WebContainers](https://webcontainers.io/)
+- [xterm.js](https://xtermjs.org/)
+- [NextAuth.js](https://next-auth.js.org/)
 
 ```
