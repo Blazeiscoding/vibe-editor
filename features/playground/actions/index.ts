@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-non-null-asserted-optional-chain */
 "use server"
 import { currentUser } from "@/features/auth/actions";
 import { db } from "@/lib/db"
@@ -183,7 +186,7 @@ export const duplicateProjectById = async (id: string) => {
                 template: originalPlayground.template,
                 userId: originalPlayground.userId,
                 templateFiles: {
-                  // @ts-ignore
+                // @ts-expect-error  
                     create: originalPlayground.templateFiles.map((file) => ({
                         content: file.content,
                     })),

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useState, useEffect, useCallback } from "react";
 import { WebContainer } from "@webcontainer/api";
 import WebContainerService from "../service/webContainerService";

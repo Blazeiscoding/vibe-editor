@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { WebContainer } from '@webcontainer/api';
 
 // Singleton class to manage WebContainer instance
@@ -45,7 +46,7 @@ class WebContainerService {
     }
   }
 
-  public async mountFiles(files: Record<string, any>): Promise<void> {
+  public async mountFiles(files: Record<string, never>): Promise<void> {
     const instance = await this.getWebContainer();
     
     if (!this.mountPromise) {

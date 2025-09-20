@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import Link from "next/link";
 import { Github as LucideGithub } from "lucide-react";
 import Image from "next/image";

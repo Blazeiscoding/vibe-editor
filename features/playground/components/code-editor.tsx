@@ -47,7 +47,7 @@ export function MonacoEditor({ content, language, onChange, readOnly = false, cl
     return () => {
       newEditor.dispose()
     }
-  }, [editorRef.current])
+  }, [content, language, readOnly])
 
   // Update content when it changes
   useEffect(() => {
