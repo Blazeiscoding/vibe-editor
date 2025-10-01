@@ -17,9 +17,11 @@ import {
   Save,
   X,
   Settings,
+  Home,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import Link from "next/link";
 
 import {
   DropdownMenu,
@@ -393,6 +395,11 @@ const MainPlaygroundPage: React.FC = () => {
               </div>
 
               <div className="flex items-center gap-1">
+                <Link href="/dashboard">
+                  <Button size="sm" variant="secondary" className="mr-1">
+                    <Home className="h-4 w-4 mr-1" /> Dashboard
+                  </Button>
+                </Link>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
