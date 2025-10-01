@@ -13,7 +13,7 @@ export async function GET() {
       where: { userId, provider: "github" },
     });
 
-    const accessToken = account?.accessToken || account?.access_token;
+    const accessToken = account?.accessToken;
     if (!accessToken) {
       return Response.json({ error: "GitHub not linked" }, { status: 400 });
     }
@@ -31,8 +31,16 @@ export async function GET() {
       return Response.json({ error: text }, { status: res.status });
     }
 
-    const data = await res.json();
-    const repos = (data as any[]).map((r) => ({
+    const data = (await res.json()) as Array<{
+      id: number;
+      name: string;
+      full_name: string;
+      private: boolean;
+      description: string | null;
+      owner?: { login?: string };
+      default_branch?: string;
+    }>;
+    const repos = data.map((r) => ({
       id: r.id,
       name: r.name,
       full_name: r.full_name,
@@ -43,7 +51,7 @@ export async function GET() {
     }));
 
     return Response.json({ repos });
-  } catch (error) {
+  } catch {
     return Response.json(
       { error: "Failed to fetch repositories" },
       { status: 500 }

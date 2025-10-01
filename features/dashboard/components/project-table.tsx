@@ -59,13 +59,6 @@ import { MarkedToggleButton } from "./toggle-star";
 
 interface ProjectTableProps {
   projects: Project[];
-  onUpdateProject?: (
-    id: string,
-    data: { title: string; description: string }
-  ) => Promise<void>;
-  onDeleteProject?: (id: string) => Promise<void>;
-  onDuplicateProject?: (id: string) => Promise<void>;
-  onMarkasFavorite?: (id: string) => Promise<void>;
 }
 
 interface EditProjectData {
@@ -73,13 +66,7 @@ interface EditProjectData {
   description: string;
 }
 
-export default function ProjectTable({
-  projects,
-  onUpdateProject,
-  onDeleteProject,
-  onDuplicateProject,
-  onMarkasFavorite,
-}: ProjectTableProps) {
+export default function ProjectTable({ projects }: ProjectTableProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
@@ -101,16 +88,20 @@ export default function ProjectTable({
 
   const handleDeleteClick = async (project: Project) => {
     setSelectedProject(project);
-
     setDeleteDialogOpen(true);
   };
 
   const handleUpdateProject = async () => {
-    if (!selectedProject || !onUpdateProject) return;
+    if (!selectedProject) return;
 
     setIsLoading(true);
     try {
-      await onUpdateProject(selectedProject.id, editData);
+      const res = await fetch(`/api/dashboard/projects/${selectedProject.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editData),
+      });
+      if (!res.ok) throw new Error("Failed to update");
       setEditDialogOpen(false);
       setSelectedProject(null);
       toast.success("Project updated successfully");
@@ -123,12 +114,18 @@ export default function ProjectTable({
   };
 
   const handleMarkasFavorite = async (project: Project) => {
-    if (!onMarkasFavorite) return;
-
     setIsLoading(true);
     try {
-      await onMarkasFavorite(project.id);
-      toast.success("Project marked as favorite successfully");
+      const res = await fetch("/api/dashboard/star", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          playgroundId: project.id,
+          isMarked: !project.Starmark[0]?.isMarked,
+        }),
+      });
+      if (!res.ok) throw new Error("Failed to toggle favorite");
+      toast.success("Project favorite toggled");
     } catch (error) {
       toast.error("Failed to mark project as favorite");
       console.error("Error marking project as favorite:", error);
@@ -138,11 +135,14 @@ export default function ProjectTable({
   };
 
   const handleDeleteProject = async () => {
-    if (!selectedProject || !onDeleteProject) return;
+    if (!selectedProject) return;
 
     setIsLoading(true);
     try {
-      await onDeleteProject(selectedProject.id);
+      const res = await fetch(`/api/dashboard/projects/${selectedProject.id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error("Failed to delete");
       setDeleteDialogOpen(false);
       setSelectedProject(null);
       toast.success("Project deleted successfully");
@@ -155,11 +155,15 @@ export default function ProjectTable({
   };
 
   const handleDuplicateProject = async (project: Project) => {
-    if (!onDuplicateProject) return;
-
     setIsLoading(true);
     try {
-      await onDuplicateProject(project.id);
+      const res = await fetch(
+        `/api/dashboard/projects/${project.id}/duplicate`,
+        {
+          method: "POST",
+        }
+      );
+      if (!res.ok) throw new Error("Failed to duplicate");
       toast.success("Project duplicated successfully");
     } catch (error) {
       toast.error("Failed to duplicate project");
@@ -220,7 +224,7 @@ export default function ProjectTable({
                     <div className="w-8 h-8 rounded-full overflow-hidden">
                       <Image
                         src={project.user.image || "/placeholder.svg"}
-                        alt={project.user.name}
+                        alt={project.user.name ?? "User avatar"}
                         width={32}
                         height={32}
                         className="object-cover"
@@ -305,8 +309,8 @@ export default function ProjectTable({
           <DialogHeader>
             <DialogTitle>Edit Project</DialogTitle>
             <DialogDescription>
-              Make changes to your project details here. Click save when you&rsquo;re
-              done.
+              Make changes to your project details here. Click save when
+              you&rsquo;re done.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">

@@ -1,16 +1,16 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { AlertCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-import { PlaygroundEditor } from "./playground-editor";
+import PlaygroundEditorClient from "./playground-editor-client";
 import { PlaygroundHeader } from "./playground-header";
 import { usePlayground } from "../hooks/usePlayground";
 import { LoadingStep } from "./loadingStep";
 
 export function PlaygroundLayout() {
-  const { error, loadingStep, templateData, fetchPlaygroundData } =
-    usePlayground();
+  const { error, isLoading, templateData, loadPlayground } = usePlayground("");
 
   if (error) {
     return (
@@ -20,14 +20,14 @@ export function PlaygroundLayout() {
           Something went wrong
         </h2>
         <p className="text-gray-600 mb-4">{error}</p>
-        <Button onClick={fetchPlaygroundData} variant="destructive">
+        <Button onClick={loadPlayground} variant="destructive">
           Try Again
         </Button>
       </div>
     );
   }
 
-  if (loadingStep < 3) {
+  if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center h-[calc(100vh-4rem)] p-4">
         <div className="w-full max-w-md p-6 rounded-lg shadow-sm border">
@@ -36,25 +36,21 @@ export function PlaygroundLayout() {
           </h2>
           <div className="mb-8">
             <LoadingStep
-              currentStep={loadingStep}
+              currentStep={1}
               step={1}
-              label="Loading playground metadata"
+              label="Loading playground data"
             />
             <LoadingStep
-              currentStep={loadingStep}
+              currentStep={2}
               step={2}
-              label="Loading template structure"
+              label="Setting up environment"
             />
-            <LoadingStep
-              currentStep={loadingStep}
-              step={3}
-              label="Ready to explore"
-            />
+            <LoadingStep currentStep={3} step={3} label="Ready to code" />
           </div>
           <div className="w-full h-2 rounded-full overflow-hidden">
             <div
               className="bg-red-600 h-full transition-all duration-300 ease-in-out"
-              style={{ width: `${(loadingStep / 3) * 100}%` }}
+              style={{ width: `50%` }}
             />
           </div>
         </div>
@@ -74,7 +70,7 @@ export function PlaygroundLayout() {
   return (
     <div className="h-screen flex flex-col">
       <PlaygroundHeader />
-      <PlaygroundEditor />
+      <PlaygroundEditorClient templateData={templateData as any} />
     </div>
   );
 }

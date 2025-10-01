@@ -1,30 +1,32 @@
-import Image from "next/image"
-import { formatDistanceToNow } from "date-fns"
-import type { Project } from "../types"
-import { Badge } from "@/components/ui/badge"
-import { Calendar, Code, User } from "lucide-react"
+import Image from "next/image";
+import { formatDistanceToNow } from "date-fns";
+import type { Project } from "../types";
+import { Badge } from "@/components/ui/badge";
+import { Calendar, Code, User } from "lucide-react";
 
 interface ProjectCardProps {
-  project: Project
+  project: Project;
 }
 
 export default function ProjectCard({ project }: ProjectCardProps) {
   // Format dates for display
-  const createdAtFormatted = formatDistanceToNow(new Date(project.createdAt), { addSuffix: true })
+  const createdAtFormatted = formatDistanceToNow(new Date(project.createdAt), {
+    addSuffix: true,
+  });
 
   // Get template icon based on template type
   const getTemplateIcon = (template: string) => {
     switch (template.toUpperCase()) {
       case "REACT":
-        return "/react-icon.png"
+        return "/react-icon.png";
       case "NEXTJS":
-        return "/nextjs-icon.png"
+        return "/nextjs-icon.png";
       case "EXPRESS":
-        return "/express-icon.png"
+        return "/express-icon.png";
       default:
-        return "/placeholder.svg"
+        return "/placeholder.svg";
     }
-  }
+  };
 
   return (
     <div className="border rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300">
@@ -44,8 +46,13 @@ export default function ProjectCard({ project }: ProjectCardProps) {
               />
             </div>
             <div>
-              <h3 className="text-xl font-bold text-gray-900">{project.title}</h3>
-              <Badge variant="outline" className="bg-[#E93F3F15] text-[#E93F3F] border-[#E93F3F] mt-1">
+              <h3 className="text-xl font-bold text-gray-900">
+                {project.title}
+              </h3>
+              <Badge
+                variant="outline"
+                className="bg-[#E93F3F15] text-[#E93F3F] border-[#E93F3F] mt-1"
+              >
                 {project.template}
               </Badge>
             </div>
@@ -55,7 +62,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
             <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white shadow-sm">
               <Image
                 src={project.user.image || "/placeholder.svg"}
-                alt={project.user.name}
+                alt={project.user.name ?? "User avatar"}
                 width={40}
                 height={40}
                 className="object-cover"
@@ -82,5 +89,5 @@ export default function ProjectCard({ project }: ProjectCardProps) {
         </div>
       </div>
     </div>
-  )
+  );
 }

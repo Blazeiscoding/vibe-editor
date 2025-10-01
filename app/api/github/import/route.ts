@@ -60,8 +60,15 @@ async function fetchDirectoryTree(
     const text = await res.text();
     throw new Error(`GitHub contents error: ${text}`);
   }
-  const entries: any[] = await res.json();
-  const items: TemplateItem[] = [] as unknown as TemplateItem[];
+  interface GitHubContentEntry {
+    type: "dir" | "file";
+    name: string;
+    path: string;
+    size?: number;
+    download_url?: string;
+  }
+  const entries = (await res.json()) as GitHubContentEntry[];
+  const items: TemplateItem[] = [];
 
   for (const entry of entries) {
     if (entry.type === "dir") {
@@ -79,10 +86,12 @@ async function fetchDirectoryTree(
           filename: entry.name.replace(/\.[^.]+$/, ""),
           fileExtension: entry.name.split(".").pop() || "",
           content: `[Skipped large file: ${entry.path}]`,
-        } as any);
+        });
         continue;
       }
-      const fileRes = await fetch(entry.download_url, { cache: "no-store" });
+      const fileRes = await fetch(entry.download_url || "", {
+        cache: "no-store",
+      });
       const content = fileRes.ok
         ? await fileRes.text()
         : `Error downloading file: ${entry.path}`;
@@ -93,7 +102,7 @@ async function fetchDirectoryTree(
         filename: entry.name.replace(/\.[^.]+$/, ""),
         fileExtension: ext,
         content,
-      } as any);
+      });
     }
   }
 
@@ -129,7 +138,7 @@ export async function POST(request: Request) {
     const account = await db.account.findFirst({
       where: { userId, provider: "github" },
     });
-    const accessToken = account?.accessToken || account?.access_token;
+    const accessToken = account?.accessToken;
     if (!accessToken) {
       return Response.json({ error: "GitHub not linked" }, { status: 400 });
     }
@@ -149,7 +158,10 @@ export async function POST(request: Request) {
       const t = await repoRes.text();
       return Response.json({ error: t }, { status: repoRes.status });
     }
-    const repoData: any = await repoRes.json();
+    const repoData = (await repoRes.json()) as {
+      name: string;
+      description?: string | null;
+    };
 
     // Build template structure from contents API
     const templateJson = await fetchDirectoryTree(
@@ -176,7 +188,7 @@ export async function POST(request: Request) {
     });
 
     return Response.json({ success: true, playgroundId: playground.id });
-  } catch (error) {
+  } catch {
     return Response.json({ error: "Import failed" }, { status: 500 });
   }
 }
