@@ -42,7 +42,6 @@ import {
 import WebContainerPreview from "@/features/webcontainers/components/webcontainer-preveiw";
 
 import { PlaygroundEditor } from "@/features/playground/components/playground-editor";
-import ToggleAI from "@/features/playground/components/toggle-ai";
 import { useFileExplorer } from "@/features/playground/hooks/useFileExplorer";
 import { usePlayground } from "@/features/playground/hooks/usePlayground";
 import { useAISuggestions } from "@/features/playground/hooks/useAISuggestion";
@@ -420,12 +419,6 @@ const MainPlaygroundPage: React.FC = () => {
                   </TooltipTrigger>
                   <TooltipContent>Save All (Ctrl+Shift+S)</TooltipContent>
                 </Tooltip>
-
-                <ToggleAI
-                  isEnabled={aiSuggestions.isEnabled}
-                  onToggle={aiSuggestions.toggleEnabled}
-                  suggestionLoading={aiSuggestions.isLoading}
-                />
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>

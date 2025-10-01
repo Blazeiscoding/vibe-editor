@@ -306,7 +306,7 @@ const TerminalComponent = forwardRef<TerminalRef, TerminalProps>(
         const { WebLinksAddon } = await import("@xterm/addon-web-links");
 
         // Import CSS dynamically
-        await import("xterm/css/xterm.css");
+        await import("@xterm/xterm/css/xterm.css");
 
         const terminal = new Terminal({
           cursorBlink: true,
