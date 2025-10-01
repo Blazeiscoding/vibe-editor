@@ -45,6 +45,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import Link from "next/link";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   MoreHorizontal,
   Edit3,
@@ -67,6 +68,7 @@ interface EditProjectData {
 }
 
 export default function ProjectTable({ projects }: ProjectTableProps) {
+  const router = useRouter();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
@@ -105,6 +107,7 @@ export default function ProjectTable({ projects }: ProjectTableProps) {
       setEditDialogOpen(false);
       setSelectedProject(null);
       toast.success("Project updated successfully");
+      router.refresh(); // Refresh server component data
     } catch (error) {
       toast.error("Failed to update project");
       console.error("Error updating project:", error);
@@ -126,6 +129,7 @@ export default function ProjectTable({ projects }: ProjectTableProps) {
       });
       if (!res.ok) throw new Error("Failed to toggle favorite");
       toast.success("Project favorite toggled");
+      router.refresh(); // Refresh server component data
     } catch (error) {
       toast.error("Failed to mark project as favorite");
       console.error("Error marking project as favorite:", error);
@@ -146,6 +150,7 @@ export default function ProjectTable({ projects }: ProjectTableProps) {
       setDeleteDialogOpen(false);
       setSelectedProject(null);
       toast.success("Project deleted successfully");
+      router.refresh(); // Refresh server component data
     } catch (error) {
       toast.error("Failed to delete project");
       console.error("Error deleting project:", error);
@@ -165,6 +170,7 @@ export default function ProjectTable({ projects }: ProjectTableProps) {
       );
       if (!res.ok) throw new Error("Failed to duplicate");
       toast.success("Project duplicated successfully");
+      router.refresh(); // Refresh server component data
     } catch (error) {
       toast.error("Failed to duplicate project");
       console.error("Error duplicating project:", error);
