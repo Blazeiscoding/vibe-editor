@@ -1,98 +1,58 @@
-# 🧠 Vibecode Editor – AI-Powered Web IDE
+# 🎨 Vibe Editor - Modern Web Development Environment
 
-![Vibecode Editor Thumbnail](public/vibe-code-editor-thumbnail.svg)
+![Vibe Editor Thumbnail](public/vibe-code-editor-thumbnail.svg)
 
-**Vibecode Editor** is a blazing-fast, AI-integrated web IDE built entirely in the browser using **Next.js App Router**, **WebContainers**, **Monaco Editor**, and **local LLMs via Ollama**. It offers real-time code execution, an AI-powered chat assistant, and support for multiple tech stacks — all wrapped in a stunning developer-first UI.
-
----
-
-## 🚀 Features
-
-- 🔐 **OAuth Login with NextAuth** – Supports Google & GitHub login.
-- 🎨 **Modern UI** – Built with TailwindCSS & ShadCN UI.
-- 🌗 **Dark/Light Mode** – Seamlessly toggle between themes.
-- 🧱 **Project Templates** – Choose from React, Next.js, Express, Hono, Vue, or Angular.
-- 🗂️ **Custom File Explorer** – Create, rename, delete, and manage files/folders easily.
-- 🖊️ **Enhanced Monaco Editor** – Syntax highlighting, formatting, keybindings, and AI autocomplete.
-- 💡 **AI Suggestions with Ollama** – Local models give you code completion on `Ctrl + Space` or double `Enter`. Accept with `Tab`.
-- ⚙️ **WebContainers Integration** – Instantly run frontend/backend apps right in the browser.
-- 💻 **Terminal with xterm.js** – Fully interactive embedded terminal experience.
-- 🤖 **AI Chat Assistant** – Share files with the AI and get help, refactors, or explanations.
+**Vibe Editor** is a modern, feature-rich web-based development environment built with Next.js 15 (App Router) and TypeScript. It provides a seamless coding experience with a beautiful UI powered by TailwindCSS and ShadCN UI components, offering a perfect blend of functionality and aesthetics for modern web development.
 
 ---
 
-## 🧱 Tech Stack
+## Features
 
-| Layer         | Technology                                   |
-|---------------|----------------------------------------------|
-| Framework     | Next.js 15 (App Router)                      |
-| Styling       | TailwindCSS, ShadCN UI                       |
-| Language      | TypeScript                                   |
-| Auth          | NextAuth (Google + GitHub OAuth)             |
-| Editor        | Monaco Editor                                |
-| AI Suggestion | Ollama (LLMs running locally via Docker)     |
-| Runtime       | WebContainers                                |
-| Terminal      | xterm.js                                     |
-| Database      | MongoDB (via DATABASE_URL)                   |
+### Core Features
+- **Modern UI** - Built with TailwindCSS and ShadCN UI components
+- **Theme Support** - Light and dark mode theming with `next-themes`
+- **Responsive Design** - Works seamlessly across all device sizes
+- **Fast Refresh** - Built with Next.js 15 and Turbopack for lightning-fast development
 
----
+### Development Environment
+- **Monaco Editor** - Feature-rich code editor with syntax highlighting
+- **File Explorer** - Intuitive file and folder management
+- **Terminal** - Integrated terminal using xterm.js
+- **Code Search** - Powerful search functionality across your project
 
-## 🛠️ Getting Started
-
-### 1. Clone the Repo
-
-```bash
-git clone https://github.com/your-username/vibecode-editor.git
-cd vibecode-editor
-````
-
-### 2. Install Dependencies
-
-```bash
-npm install
-```
-
-### 3. Set Up Environment Variables
-
-Create a `.env.local` file using the template:
-
-```bash
-cp .env.example .env.local
-```
-
-Then, fill in your credentials:
-
-```env
-AUTH_SECRET=your_auth_secret
-AUTH_GOOGLE_ID=your_google_client_id
-AUTH_GOOGLE_SECRET=your_google_secret
-AUTH_GITHUB_ID=your_github_client_id
-AUTH_GITHUB_SECRET=your_github_secret
-DATABASE_URL=your_mongodb_connection_string
-NEXTAUTH_URL=http://localhost:3000
-```
-
-### 4. Start Local Ollama Model
-
-Make sure [Ollama](https://ollama.com/) and Docker are installed, then run:
-
-```bash
-ollama run codellama
-```
-
-Or use your preferred model that supports code generation.
-
-### 5. Run the Development Server
-
-```bash
-npm run dev
-```
-
-Visit `http://localhost:3000` in your browser.
+### Project Management
+- **Dashboard** - Central hub for all your projects
+- **Project Templates** - Quick start with various project templates
+- **Real-time Collaboration** - Work together with your team in real-time
+- **Dependency Management** - Built-in package management
 
 ---
 
-## 📁 Project Structure
+## Tech Stack
+
+### Core Technologies
+- **Framework**: Next.js 15 (App Router)
+- **Language**: TypeScript
+- **Styling**: TailwindCSS + ShadCN UI
+- **State Management**: Zustand + React Hooks
+- **Authentication**: NextAuth.js
+- **Database**: MongoDB with Prisma ORM
+- **UI Components**: Radix UI + ShadCN
+- **Code Editor**: Monaco Editor
+- **Terminal**: xterm.js
+
+### Key Dependencies
+- **Form Handling**: React Hook Form + Zod
+- **Date/Time**: date-fns
+- **Charts**: Recharts
+- **Markdown**: react-markdown
+- **UI Utilities**: class-variance-authority, clsx, tailwind-merge
+- **Icons**: Lucide React
+- **Notifications**: Sonner              |
+
+---
+
+## Getting Started
 
 ```
 .
