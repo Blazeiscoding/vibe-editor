@@ -30,7 +30,7 @@ export function Footer() {
           {socialLinks.map((link, index) => (
             <Link
               key={index}
-              href={link.href || "#"}
+              href={link.href || "https://github.com/Blazeiscoding"}
               target="_blank"
               rel="noopener noreferrer"
             >
