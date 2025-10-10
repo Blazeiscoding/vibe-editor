@@ -47,7 +47,7 @@ interface PlaygroundData {
 
 // Map icon names (strings) to their corresponding LucideIcon components
 const lucideIconMap: Record<string, LucideIcon> = {
-  Zap: Zap,
+  Zap: Zap, 
   Lightbulb: Lightbulb,
   Database: Database,
   Compass: Compass,
