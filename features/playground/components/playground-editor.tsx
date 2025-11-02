@@ -13,19 +13,12 @@ import {
 } from "@/features/playground/libs/editor-config";
 import type { TemplateFile } from "@/features/playground/libs/path-to-json";
 
+import { EditorSkeleton } from "@/components/loading/editor-skeleton";
+
 // Dynamically import Monaco Editor with no SSR
 const MonacoEditor = dynamic(() => import("@monaco-editor/react"), {
   ssr: false,
-  loading: () => (
-    <div className="h-full flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-      <div className="text-center">
-        <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-        <p className="text-sm text-gray-600 dark:text-gray-400">
-          Loading editor...
-        </p>
-      </div>
-    </div>
-  ),
+  loading: () => <EditorSkeleton />,
 });
 
 interface PlaygroundEditorProps {

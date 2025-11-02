@@ -3,6 +3,7 @@
 import AddNewButton from "@/features/dashboard/components/add-new-btn";
 import AddRepo from "@/features/dashboard/components/add-repo";
 import ProjectTable from "@/features/dashboard/components/project-table";
+import { RecentProjects } from "@/features/dashboard/components/recent-projects";
 import { getAllPlaygroundForUser } from "@/features/playground/actions";
 
 const EmptyState = () => (
@@ -22,6 +23,20 @@ const DashboardMainPage = async () => {
         <AddNewButton />
         <AddRepo />
       </div>
+      
+      {/* Recent Projects Section */}
+      {playgrounds && playgrounds.length > 0 && (
+        <div className="mt-8 w-full">
+          <RecentProjects
+            projects={(playgrounds || []).map((p) => ({
+              ...p,
+              description: p.description ?? "",
+            }))}
+            maxItems={5}
+          />
+        </div>
+      )}
+      
       <div className="mt-10 flex flex-col justify-center items-center w-full">
         {playgrounds && playgrounds.length === 0 ? (
           <EmptyState />

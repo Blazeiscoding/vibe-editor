@@ -1,12 +1,23 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import * as monaco from "monaco-editor"
-import { loader } from "@monaco-editor/react"
 import { cn } from "@/lib/utils"
+import { EditorSkeleton } from "@/components/loading/editor-skeleton"
 
-// Configure Monaco loader
-loader.config({ monaco })
+// Lazy load Monaco for better performance
+let monaco: any = null
+let loader: any = null
+
+const loadMonaco = async () => {
+  if (!monaco) {
+    const monacoModule = await import("monaco-editor")
+    const loaderModule = await import("@monaco-editor/react")
+    monaco = monacoModule.default
+    loader = loaderModule.loader
+    loader.config({ monaco })
+  }
+  return monaco
+}
 
 interface MonacoEditorProps {
   content: string
@@ -18,34 +29,54 @@ interface MonacoEditorProps {
 
 export function MonacoEditor({ content, language, onChange, readOnly = false, className }: MonacoEditorProps) {
   const editorRef = useRef<HTMLDivElement>(null)
-  const [editor, setEditor] = useState<monaco.editor.IStandaloneCodeEditor | null>(null)
+  const [editor, setEditor] = useState<any>(null)
+  const [isLoading, setIsLoading] = useState(true)
 
   // Initialize editor
   useEffect(() => {
     if (!editorRef.current) return
 
-    const newEditor = monaco.editor.create(editorRef.current, {
-      value: content,
-      language: getLanguageFromExtension(language),
-      theme: "vs-dark",
-      automaticLayout: true,
-      minimap: { enabled: true },
-      scrollBeyondLastLine: false,
-      readOnly,
-      fontSize: 14,
-      lineNumbers: "on",
-      wordWrap: "on",
-      renderLineHighlight: "all",
-      scrollbar: {
-        verticalScrollbarSize: 10,
-        horizontalScrollbarSize: 10,
-      },
-    })
+    let isMounted = true
 
-    setEditor(newEditor)
+    const initEditor = async () => {
+      try {
+        const monacoInstance = await loadMonaco()
+        
+        if (!isMounted || !editorRef.current) return
+
+        const newEditor = monacoInstance.editor.create(editorRef.current, {
+          value: content,
+          language: getLanguageFromExtension(language),
+          theme: "vs-dark",
+          automaticLayout: true,
+          minimap: { enabled: true },
+          scrollBeyondLastLine: false,
+          readOnly,
+          fontSize: 14,
+          lineNumbers: "on",
+          wordWrap: "on",
+          renderLineHighlight: "all",
+          scrollbar: {
+            verticalScrollbarSize: 10,
+            horizontalScrollbarSize: 10,
+          },
+        })
+
+        setEditor(newEditor)
+        setIsLoading(false)
+      } catch (error) {
+        console.error("Failed to load Monaco editor:", error)
+        setIsLoading(false)
+      }
+    }
+
+    initEditor()
 
     return () => {
-      newEditor.dispose()
+      isMounted = false
+      if (editor) {
+        editor.dispose()
+      }
     }
   }, [content, language, readOnly])
 
@@ -75,6 +106,10 @@ export function MonacoEditor({ content, language, onChange, readOnly = false, cl
       }
     }
   }, [editor, onChange])
+
+  if (isLoading) {
+    return <EditorSkeleton />
+  }
 
   return (
     <div ref={editorRef} className={cn("h-full w-full border border-border rounded-md overflow-hidden", className)} />

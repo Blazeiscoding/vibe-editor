@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Copy, Trash2, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { TerminalSkeleton } from "@/components/loading/terminal-skeleton";
 
 interface TerminalProps {
   webcontainerUrl?: string;
