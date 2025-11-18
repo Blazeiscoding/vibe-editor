@@ -6,6 +6,7 @@ import { currentUser } from "@/features/auth/actions";
 import { db } from "@/lib/db"
 import { TemplateFolder } from "../libs/path-to-json";
 import { revalidatePath } from "next/cache";
+import { logger } from "@/lib/logger";
 
 
 // Toggle marked status for a problem
@@ -40,8 +41,8 @@ export const toggleStarMarked = async (playgroundId: string, isChecked: boolean)
     revalidatePath("/dashboard");
     return { success: true, isMarked: isChecked };
   } catch (error) {
-    console.error("Error updating problem:", error);
-    return { success: false, error: "Failed to update problem" };
+    logger.error("Error updating star mark", { playgroundId, isChecked, error });
+    return { success: false, error: "Failed to update star mark" };
   }
 };
 
@@ -63,17 +64,18 @@ export const createPlayground = async (data:{
             }
         })
 
+        revalidatePath("/dashboard");
         return playground;
     } catch (error) {
-        console.log(error)
+        logger.error("Error creating playground", { data, error });
+        throw new Error("Failed to create playground");
     }
 }
 
 
 export const getAllPlaygroundForUser = async ()=>{
-    const user = await currentUser();
     try {
-        const user  = await currentUser();
+        const user = await currentUser();
         const playground = await db.playground.findMany({
             where:{
                 userId:user?.id!
@@ -93,7 +95,8 @@ export const getAllPlaygroundForUser = async ()=>{
       
         return playground;
     } catch (error) {
-        console.log(error)
+        logger.error("Error fetching playgrounds for user", { error });
+        return [];
     }
 }
 
@@ -111,7 +114,8 @@ export const getPlaygroundById = async (id:string)=>{
         })
         return playground;
     } catch (error) {
-        console.log(error)
+        logger.error("Error fetching playground by id", { id, error });
+        return null;
     }
 }
 
@@ -133,9 +137,10 @@ export const SaveUpdatedCode = async (playgroundId: string, data: TemplateFolder
       },
     });
 
+    revalidatePath(`/playground/${playgroundId}`);
     return updatedPlayground;
   } catch (error) {
-    console.log("SaveUpdatedCode error:", error);
+    logger.error("Error saving updated code", { playgroundId, error });
     return null;
   }
 };
@@ -147,7 +152,8 @@ export const deleteProjectById = async (id:string)=>{
         })
         revalidatePath("/dashboard")
     } catch (error) {
-        console.log(error)
+        logger.error("Error deleting project", { id, error });
+        throw new Error("Failed to delete project");
     }
 }
 
@@ -160,7 +166,8 @@ export const editProjectById = async (id:string,data:{title:string , description
         })
         revalidatePath("/dashboard")
     } catch (error) {
-        console.log(error)
+        logger.error("Error editing project", { id, data, error });
+        throw new Error("Failed to edit project");
     }
 }
 
@@ -199,6 +206,7 @@ export const duplicateProjectById = async (id: string) => {
 
         return duplicatedPlayground;
     } catch (error) {
-        console.error("Error duplicating project:", error);
+        logger.error("Error duplicating project", { id, error });
+        throw new Error("Failed to duplicate project");
     }
 };

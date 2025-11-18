@@ -34,6 +34,9 @@ model User {
   staredPlayground Playground[]
   createdAt        DateTime     @default(now())
   updatedAt        DateTime     @updatedAt
+
+  @@index([email])
+  @@index([createdAt])
 }
 
 model Account {
@@ -76,6 +79,10 @@ model Playground {
   Starmark      StarMark[]
   userId        String
   user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, createdAt])
+  @@index([template])
 }
 
 model StarMark {
