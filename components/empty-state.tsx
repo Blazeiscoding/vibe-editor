@@ -44,6 +44,11 @@ export function EmptyState({
   const finalAction = action || defaultAction;
   const finalTips = tips || defaultTips;
 
+  // Type guard to check if action has onClick
+  const hasOnClick = (action: typeof finalAction): action is { label: string; onClick: () => void } => {
+    return 'onClick' in action && typeof action.onClick === 'function';
+  };
+
   return (
     <Card className="w-full max-w-2xl mx-auto border-dashed">
       <CardHeader className="text-center">
@@ -64,8 +69,14 @@ export function EmptyState({
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </Link>
-        ) : (
+        ) : hasOnClick(finalAction) ? (
           <Button size="lg" className="w-full" onClick={finalAction.onClick}>
+            <Plus className="mr-2 h-4 w-4" />
+            {finalAction.label}
+            <ArrowRight className="ml-2 h-4 w-4" />
+          </Button>
+        ) : (
+          <Button size="lg" className="w-full" disabled>
             <Plus className="mr-2 h-4 w-4" />
             {finalAction.label}
             <ArrowRight className="ml-2 h-4 w-4" />
