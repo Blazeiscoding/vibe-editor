@@ -6,6 +6,7 @@ import { auth } from "@/auth";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { Analytics } from "@vercel/analytics/next";
 import { ErrorBoundary } from "@/components/error-boundary";
+import { Toaster } from "@/components/ui/sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -85,6 +86,7 @@ export default async function RootLayout({
           >
             <ErrorBoundary>
               {children}
+              <Toaster />
             </ErrorBoundary>
           </ThemeProvider>
         </body>
