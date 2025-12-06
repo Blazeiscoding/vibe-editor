@@ -6,11 +6,13 @@ import { revalidatePath } from "next/cache";
 import type { NextRequest } from "next/server";
 
 export async function POST(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await auth();
+    const session = await auth.api.getSession({
+      headers: request.headers as unknown as Headers,
+    });
     if (!session?.user?.id) {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
     }

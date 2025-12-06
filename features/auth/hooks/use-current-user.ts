@@ -1,9 +1,9 @@
 "use client";
 
-import { useAuthClient } from "better-auth/react";
+import { authClient } from "@/lib/auth-client";
 
 export const useCurrentUser = () => {
-    const { data: session } = useAuthClient();
+    const { data: session } = authClient.useSession();
 
     return session?.user;
 };

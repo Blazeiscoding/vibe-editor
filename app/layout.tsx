@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { AuthProvider } from "better-auth/react";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { Analytics } from "@vercel/analytics/next";
 import { ErrorBoundary } from "@/components/error-boundary";
@@ -74,25 +73,17 @@ export default async function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <AuthProvider
-          baseURL={
-            process.env.BETTER_AUTH_URL ||
-            process.env.NEXTAUTH_URL ||
-            "http://localhost:3000"
-          }
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
         >
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
-            <ErrorBoundary>
-              {children}
-              <Toaster />
-            </ErrorBoundary>
-          </ThemeProvider>
-        </AuthProvider>
+          <ErrorBoundary>
+            {children}
+            <Toaster />
+          </ErrorBoundary>
+        </ThemeProvider>
         <Analytics />
       </body>
     </html>

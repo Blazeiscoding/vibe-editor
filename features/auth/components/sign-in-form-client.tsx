@@ -11,10 +11,10 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Chrome, Github } from "lucide-react";
-import { useAuthClient } from "better-auth/react";
+import { authClient } from "@/lib/auth-client";
 
 const SignInFormClient = () => {
-  const { signIn } = useAuthClient();
+  const { signIn } = authClient;
 
   const handleGoogleSignIn = async () => {
     await signIn.social({
@@ -30,7 +30,6 @@ const SignInFormClient = () => {
     });
   };
 
-const SignInFormClient = () => {
   return (
     <Card className="w-full max-w-md">
       <CardHeader className="space-y-1">

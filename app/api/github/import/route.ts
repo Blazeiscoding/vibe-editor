@@ -1,5 +1,6 @@
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
+import { headers } from "next/headers";
 import {
   TemplateFolder,
   TemplateItem,
@@ -112,7 +113,9 @@ async function fetchDirectoryTree(
 
 export async function POST(request: Request) {
   try {
-    const session = await auth();
+    const session = await auth.api.getSession({
+      headers: (await headers()) as unknown as Headers,
+    });
     const userId = session?.user?.id;
     if (!userId) {
       return Response.json({ error: "Unauthorized" }, { status: 401 });

@@ -3,11 +3,11 @@
 import React from 'react'
 import { LogoutButtonProps } from '../types'
 import { useRouter } from 'next/navigation'
-import { useAuthClient } from 'better-auth/react';
+import { authClient } from '@/lib/auth-client';
 
 const LogoutButton = ({children}:LogoutButtonProps) => {
     const router = useRouter();
-    const { signOut } = useAuthClient();
+    const { signOut } = authClient;
     const onLogout = async()=>{
         await signOut()
         router.refresh()

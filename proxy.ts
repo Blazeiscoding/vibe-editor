@@ -9,7 +9,7 @@ import {
   authRoutes,
 } from "@/routes";
 
-export async function middleware(req: NextRequest) {
+export default async function proxy(req: NextRequest) {
   const { nextUrl } = req;
   
   try {
