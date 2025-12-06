@@ -1,2 +1,4 @@
-import { handlers } from "@/auth"; // Referring to the auth.ts we just created
-export const { GET, POST } = handlers;
+import { auth } from "@/auth";
+import { toNextJsHandler } from "better-auth/next-js";
+
+export const { GET, POST } = toNextJsHandler(auth);

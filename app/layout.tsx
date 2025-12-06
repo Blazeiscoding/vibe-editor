@@ -1,8 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { SessionProvider } from "next-auth/react";
-import { auth } from "@/auth";
+import { AuthProvider } from "better-auth/react";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { Analytics } from "@vercel/analytics/next";
 import { ErrorBoundary } from "@/components/error-boundary";
@@ -70,13 +69,17 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const session = await auth();
   return (
-    <SessionProvider session={session}>
-      <Analytics />
-      <html lang="en">
-        <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+    <html lang="en">
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      >
+        <AuthProvider
+          baseURL={
+            process.env.BETTER_AUTH_URL ||
+            process.env.NEXTAUTH_URL ||
+            "http://localhost:3000"
+          }
         >
           <ThemeProvider
             attribute="class"
@@ -89,8 +92,9 @@ export default async function RootLayout({
               <Toaster />
             </ErrorBoundary>
           </ThemeProvider>
-        </body>
-      </html>
-    </SessionProvider>
+        </AuthProvider>
+        <Analytics />
+      </body>
+    </html>
   );
 }

@@ -1,4 +1,6 @@
-import NextAuth from "next-auth";
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { auth } from "@/auth";
 
 import {
   DEFAULT_LOGIN_REDIRECT,
@@ -6,37 +8,46 @@ import {
   publicRoutes,
   authRoutes,
 } from "@/routes";
-import authConfig from "./auth.config";
 
-const { auth } = NextAuth(authConfig);
-
-export default auth((req) => {
+export async function middleware(req: NextRequest) {
   const { nextUrl } = req;
-  const isLoggedIn = !!req.auth;
+  
+  try {
+    const session = await auth.api.getSession({
+      headers: req.headers as unknown as Headers,
+    });
+    const isLoggedIn = !!session;
 
-  const isApiAuthRoute = nextUrl.pathname.startsWith(apiAuthPrefix);
+    const isApiAuthRoute = nextUrl.pathname.startsWith(apiAuthPrefix);
 
-  const isPublicRoute = publicRoutes.includes(nextUrl.pathname);
+    const isPublicRoute = publicRoutes.includes(nextUrl.pathname);
 
-  const isAuthRoute = authRoutes.includes(nextUrl.pathname);
+    const isAuthRoute = authRoutes.includes(nextUrl.pathname);
 
-  if (isApiAuthRoute) {
-    return null;
-  }
-
-  if (isAuthRoute) {
-    if (isLoggedIn) {
-      return Response.redirect(new URL(DEFAULT_LOGIN_REDIRECT, nextUrl));
+    if (isApiAuthRoute) {
+      return NextResponse.next();
     }
-    return null;
-  }
 
-  if (!isLoggedIn && !isPublicRoute) {
-    return Response.redirect(new URL("/auth/sign-in", nextUrl));
-  }
+    if (isAuthRoute) {
+      if (isLoggedIn) {
+        return NextResponse.redirect(new URL(DEFAULT_LOGIN_REDIRECT, nextUrl));
+      }
+      return NextResponse.next();
+    }
 
-  return null;
-});
+    if (!isLoggedIn && !isPublicRoute) {
+      return NextResponse.redirect(new URL("/auth/sign-in", nextUrl));
+    }
+
+    return NextResponse.next();
+  } catch {
+    // If auth check fails, allow public routes
+    if (publicRoutes.includes(nextUrl.pathname)) {
+      return NextResponse.next();
+    }
+    return NextResponse.redirect(new URL("/auth/sign-in", nextUrl));
+  }
+}
 
 export const config = {
   // copied from clerk

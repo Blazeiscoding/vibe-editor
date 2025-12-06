@@ -1,126 +1,26 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import NextAuth from "next-auth";
-import { PrismaAdapter } from "@auth/prisma-adapter";
-
-import authConfig from "./auth.config";
+import { betterAuth } from "better-auth";
+import { prismaAdapter } from "better-auth/adapters/prisma";
 import { db } from "./lib/db";
-import { getAccountByUserId, getUserById } from "./features/auth/actions";
+import { github, google } from "better-auth/plugins";
 
-export const { auth, handlers, signIn, signOut } = NextAuth({
-  callbacks: {
-    /**
-     * Handle user creation and account linking after a successful sign-in
-     */
-    async signIn({ user, account, profile }) {
-      if (!user || !account) return false;
-
-      // Check if the user already exists
-      const existingUser = await db.user.findUnique({
-        where: { email: user.email! },
-      });
-
-      // If user does not exist, create a new one
-      if (!existingUser) {
-        const newUser = await db.user.create({
-          data: {
-            email: user.email!,
-            name: user.name,
-            image: user.image,
-
-            accounts: {
-              create: {
-                type: account.type,
-                provider: account.provider,
-                providerAccountId: account.providerAccountId,
-                refreshToken: account.refresh_token,
-                accessToken: account.access_token,
-                expiresAt: account.expires_at
-                  ? new Date(account.expires_at * 1000)
-                  : null,
-                tokenType: account.token_type,
-                scope: account.scope,
-                idToken: account.id_token,
-                sessionState: account.session_state
-                  ? String(account.session_state)
-                  : null,
-              },
-            },
-          },
-        });
-
-        if (!newUser) return false; // Return false if user creation fails
-      } else {
-        // Link the account if user exists
-        const existingAccount = await db.account.findUnique({
-          where: {
-            provider_providerAccountId: {
-              provider: account.provider,
-              providerAccountId: account.providerAccountId,
-            },
-          },
-        });
-
-        // If the account does not exist, create it
-        if (!existingAccount) {
-          await db.account.create({
-            data: {
-              userId: existingUser.id,
-              type: account.type,
-              provider: account.provider,
-              providerAccountId: account.providerAccountId,
-              refreshToken: account.refresh_token,
-              accessToken: account.access_token,
-              expiresAt: account.expires_at
-                ? new Date(account.expires_at * 1000)
-                : null,
-              tokenType: account.token_type,
-              scope: account.scope,
-              idToken: account.id_token,
-
-              sessionState: account.session_state
-                ? String(account.session_state)
-                : null,
-            },
-          });
-        }
-      }
-
-      return true;
-    },
-
-    async jwt({ token, user, account }) {
-      if (!token.sub) return token;
-      const existingUser = await getUserById(token.sub);
-
-      if (!existingUser) return token;
-
-      const exisitingAccount = await getAccountByUserId(existingUser.id);
-
-      token.name = existingUser.name;
-      token.email = existingUser.email;
-      token.image = existingUser.image;
-      token.role = existingUser.role;
-
-      return token;
-    },
-
-    async session({ session, token }) {
-      // Attach the user ID from the token to the session
-      if (token.sub && session.user) {
-        session.user.id = token.sub;
-        session.user.name = token.name as string;
-        session.user.email = token.email as string;
-        session.user.image = token.image as string;
-        (session.user as any).role = token.role;
-      }
-
-      return session;
-    },
+export const auth = betterAuth({
+  database: prismaAdapter(db, {
+    provider: "mongodb",
+  }),
+  emailAndPassword: {
+    enabled: false,
   },
-
-  secret: process.env.AUTH_SECRET,
-  adapter: PrismaAdapter(db),
-  session: { strategy: "jwt" },
-  ...authConfig,
+  plugins: [
+    github({
+      clientId: process.env.GITHUB_ID!,
+      clientSecret: process.env.GITHUB_SECRET!,
+      scope: ["read:user", "user:email", "repo"],
+    }),
+    google({
+      clientId: process.env.GOOGLE_ID!,
+      clientSecret: process.env.GOOGLE_SECRET!,
+    }),
+  ],
+  secret: process.env.AUTH_SECRET || process.env.BETTER_AUTH_SECRET!,
+  baseURL: process.env.BETTER_AUTH_URL || process.env.NEXTAUTH_URL || "http://localhost:3000",
 });

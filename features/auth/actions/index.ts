@@ -32,6 +32,6 @@ export const getAccountByUserId = async (userId:string)=>{
 }
 
 export const currentUser = async()=>{
-    const user = await auth()
-    return user?.user;
+    const session = await auth.api.getSession({ headers: {} as Headers });
+    return session?.user;
 }
