@@ -6,6 +6,9 @@ import { getAllPlaygroundForUser } from "@/features/playground/actions";
 import { EmptyState } from "@/components/empty-state";
 import { DashboardClient } from "@/features/dashboard/components/dashboard-client";
 
+// Force dynamic rendering to avoid auth errors during static build
+export const dynamic = 'force-dynamic';
+
 const DashboardMainPage = async () => {
   const playgrounds = await getAllPlaygroundForUser();
   const projects = (playgrounds || []).map((p) => ({

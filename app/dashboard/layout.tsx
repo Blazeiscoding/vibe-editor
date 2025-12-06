@@ -4,6 +4,9 @@ import { getAllPlaygroundForUser } from "@/features/playground/actions";
 
 import type React from "react";
 
+// Force dynamic rendering to avoid auth errors during static build
+export const dynamic = 'force-dynamic';
+
 export default async function DashboardLayout({
   children,
 }: {
