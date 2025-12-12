@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable react/no-unescaped-entities */
 "use client";
 
@@ -57,6 +56,9 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { MarkedToggleButton } from "./toggle-star";
+import { loggers } from "@/lib/logger";
+
+const log = loggers.dashboard;
 
 interface ProjectTableProps {
   projects: Project[];
@@ -77,7 +79,6 @@ export default function ProjectTable({ projects }: ProjectTableProps) {
     description: "",
   });
   const [isLoading, setIsLoading] = useState(false);
-  const [favoutrie, setFavourite] = useState(false);
 
   const handleEditClick = (project: Project) => {
     setSelectedProject(project);
@@ -110,7 +111,7 @@ export default function ProjectTable({ projects }: ProjectTableProps) {
       router.refresh(); // Refresh server component data
     } catch (error) {
       toast.error("Failed to update project");
-      console.error("Error updating project:", error);
+      log.error("Error updating project", { error });
     } finally {
       setIsLoading(false);
     }
@@ -132,7 +133,7 @@ export default function ProjectTable({ projects }: ProjectTableProps) {
       router.refresh(); // Refresh server component data
     } catch (error) {
       toast.error("Failed to mark project as favorite");
-      console.error("Error marking project as favorite:", error);
+      log.error("Error marking project as favorite", { error });
     } finally {
       setIsLoading(false);
     }
@@ -153,7 +154,7 @@ export default function ProjectTable({ projects }: ProjectTableProps) {
       router.refresh(); // Refresh server component data
     } catch (error) {
       toast.error("Failed to delete project");
-      console.error("Error deleting project:", error);
+      log.error("Error deleting project", { error });
     } finally {
       setIsLoading(false);
     }
@@ -173,7 +174,7 @@ export default function ProjectTable({ projects }: ProjectTableProps) {
       router.refresh(); // Refresh server component data
     } catch (error) {
       toast.error("Failed to duplicate project");
-      console.error("Error duplicating project:", error);
+      log.error("Error duplicating project", { error });
     } finally {
       setIsLoading(false);
     }

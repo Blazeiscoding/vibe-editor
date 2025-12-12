@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 import TemplateSelectionModal from "@/components/modal/template-selector-modal";
 import { Button } from "@/components/ui/button"
@@ -8,6 +7,9 @@ import Image from "next/image"
 import { useRouter } from "next/navigation";
 import { useState } from "react"
 import { toast } from "sonner";
+import { loggers } from "@/lib/logger";
+
+const log = loggers.dashboard;
 
 const AddNewButton = () => {
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -28,7 +30,7 @@ const AddNewButton = () => {
     toast("Playground created successfully");
     // Here you would typically handle the creation of a new playground
     // with the selected template data
-    console.log("Creating new playground:", data)
+    log.debug("Creating new playground", { template: data.template, title: data.title });
     setIsModalOpen(false)
     router.push(`/playground/${res?.id}`)
   }

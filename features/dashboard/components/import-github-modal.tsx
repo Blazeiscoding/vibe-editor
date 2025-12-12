@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -82,8 +81,9 @@ export function ImportGithubModal({
       toast.success("Repository imported");
       onOpenChange(false);
       router.push(`/playground/${data.playgroundId}`);
-    } catch (e: any) {
-      toast.error(e.message || "Import failed");
+    } catch (e) {
+      const error = e instanceof Error ? e : new Error("Import failed");
+      toast.error(error.message);
     } finally {
       setLoading(false);
     }
@@ -107,8 +107,9 @@ export function ImportGithubModal({
       toast.success("Repository imported");
       onOpenChange(false);
       router.push(`/playground/${data.playgroundId}`);
-    } catch (e: any) {
-      toast.error(e.message || "Import failed");
+    } catch (e) {
+      const error = e instanceof Error ? e : new Error("Import failed");
+      toast.error(error.message);
     } finally {
       setLoading(false);
     }
