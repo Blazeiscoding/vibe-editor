@@ -4,12 +4,22 @@
 "use client";
 
 import React, { useEffect, useState, useRef } from "react";
+import dynamic from "next/dynamic";
 import type { TemplateFolder } from "@/features/playground/libs/path-to-json";
 import { transformToWebContainerFormat } from "../hooks/transformer";
 import { CheckCircle, Loader2, XCircle } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
-import TerminalComponent from "./terminal";
 import { WebContainer } from "@webcontainer/api";
+import { TerminalSkeleton } from "@/components/loading/terminal-skeleton";
+
+// Dynamically import Terminal component with no SSR for code splitting
+const TerminalComponent = dynamic(
+  () => import("./terminal"),
+  { 
+    ssr: false, 
+    loading: () => <TerminalSkeleton /> 
+  }
+);
 
 interface WebContainerPreviewProps {
   templateData: TemplateFolder;
