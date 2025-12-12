@@ -1,6 +1,7 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { db } from "./lib/db";
+import { env } from "./lib/env";
 
 export const auth = betterAuth({
   database: prismaAdapter(db, {
@@ -11,15 +12,19 @@ export const auth = betterAuth({
   },
   socialProviders: {
     github: {
-      clientId: process.env.GITHUB_ID!,
-      clientSecret: process.env.GITHUB_SECRET!,
+      clientId: env.githubId,
+      clientSecret: env.githubSecret,
       scope: ["read:user", "user:email", "repo"],
     },
-    google: {
-      clientId: process.env.GOOGLE_ID!,
-      clientSecret: process.env.GOOGLE_SECRET!,
-    },
+    ...(env.googleId && env.googleSecret
+      ? {
+          google: {
+            clientId: env.googleId,
+            clientSecret: env.googleSecret,
+          },
+        }
+      : {}),
   },
-  secret: process.env.AUTH_SECRET || process.env.BETTER_AUTH_SECRET!,
-  baseURL: process.env.BETTER_AUTH_URL || process.env.NEXTAUTH_URL || "http://localhost:3000",
+  secret: env.authSecret,
+  baseURL: env.baseUrl,
 });
