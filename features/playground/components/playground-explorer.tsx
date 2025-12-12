@@ -96,7 +96,7 @@ export function TemplateFileTree({
   }
 
   return (
-    <Sidebar>
+    <Sidebar className="glass border-r-0" collapsible="none">
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>{title}</SidebarGroupLabel>

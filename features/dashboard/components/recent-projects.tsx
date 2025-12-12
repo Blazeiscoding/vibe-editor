@@ -24,17 +24,17 @@ export function RecentProjects({ projects, maxItems = 5 }: RecentProjectsProps) 
   }
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Clock className="h-5 w-5" />
+    <div className="glass-card rounded-xl w-full p-6">
+      <div className="mb-6">
+        <h3 className="text-xl font-semibold flex items-center gap-2 mb-1">
+          <Clock className="h-5 w-5 text-primary" />
           Recent Projects
-        </CardTitle>
-        <CardDescription>
+        </h3>
+        <p className="text-sm text-muted-foreground">
           Quick access to your recently used projects
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
+        </p>
+      </div>
+      <div>
         <div className="space-y-3">
           {recentProjects.map((project) => (
             <Link
@@ -42,35 +42,31 @@ export function RecentProjects({ projects, maxItems = 5 }: RecentProjectsProps) 
               href={`/playground/${project.id}`}
               className="block"
             >
-              <div className="group flex items-center justify-between p-3 rounded-lg border hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950/30 transition-all duration-200">
+              <div className="group flex items-center justify-between p-3 rounded-lg border border-transparent hover:border-white/10 hover:bg-white/5 transition-all duration-200">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <h4 className="font-semibold text-sm truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                    <h4 className="font-medium text-sm truncate group-hover:text-primary transition-colors">
                       {project.title}
                     </h4>
-                    <Badge variant="secondary" className="text-xs">
+                    <Badge variant="secondary" className="text-xs bg-secondary/50">
                       {project.template}
                     </Badge>
                   </div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                  <p className="text-xs text-muted-foreground truncate">
                     {project.description || "No description"}
                   </p>
-                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                  <p className="text-xs text-muted-foreground/60 mt-1">
                     {formatDistanceToNow(new Date(project.createdAt), { addSuffix: true })}
                   </p>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
+                <div className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity transform group-hover:translate-x-1 duration-200">
+                  <ArrowRight className="h-4 w-4 text-primary" />
+                </div>
               </div>
             </Link>
           ))}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }

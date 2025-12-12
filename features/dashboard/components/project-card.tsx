@@ -29,13 +29,15 @@ export default function ProjectCard({ project }: ProjectCardProps) {
   };
 
   return (
-    <div className="border rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300">
-      <div className="p-6">
+    <div className="glass-card rounded-xl overflow-hidden hover:bg-white/5 transition-all duration-300 group cursor-pointer relative">
+      {/* Glow effect on hover */}
+      <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+      
+      <div className="p-6 relative z-10">
         <div className="flex justify-between items-start mb-4">
           <div className="flex items-center gap-3">
             <div
-              className="relative w-12 h-12 flex items-center justify-center rounded-full"
-              style={{ backgroundColor: "#61DAFB15" }}
+              className="relative w-12 h-12 flex items-center justify-center rounded-xl bg-secondary/50 border border-white/5"
             >
               <Image
                 src={getTemplateIcon(project.template) || "/placeholder.svg"}
@@ -46,12 +48,12 @@ export default function ProjectCard({ project }: ProjectCardProps) {
               />
             </div>
             <div>
-              <h3 className="text-xl font-bold text-gray-900">
+              <h3 className="text-xl font-bold group-hover:text-primary transition-colors">
                 {project.title}
               </h3>
               <Badge
                 variant="outline"
-                className="bg-[#E93F3F15] text-[#E93F3F] border-[#E93F3F] mt-1"
+                className="mt-1 border-primary/20 text-primary bg-primary/5"
               >
                 {project.template}
               </Badge>
@@ -59,7 +61,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
           </div>
 
           <div className="flex items-center">
-            <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white shadow-sm">
+            <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-background shadow-sm ring-1 ring-border">
               <Image
                 src={project.user.image || "/placeholder.svg"}
                 alt={project.user.name ?? "User avatar"}
@@ -71,20 +73,20 @@ export default function ProjectCard({ project }: ProjectCardProps) {
           </div>
         </div>
 
-        <p className="text-gray-600 mb-4 line-clamp-2">{project.description}</p>
+        <p className="text-muted-foreground mb-4 line-clamp-2 min-h-[3rem]">{project.description}</p>
 
-        <div className="flex flex-col gap-2 text-sm text-gray-500">
+        <div className="flex flex-col gap-2 text-sm text-muted-foreground/80">
           <div className="flex items-center gap-2">
-            <User size={14} />
+            <User size={14} className="text-primary/70" />
             <span>{project.user.name}</span>
           </div>
           <div className="flex items-center gap-2">
-            <Calendar size={14} />
+            <Calendar size={14} className="text-primary/70" />
             <span>Created {createdAtFormatted}</span>
           </div>
           <div className="flex items-center gap-2">
-            <Code size={14} />
-            <span>ID: {project.id.substring(0, 8)}...</span>
+            <Code size={14} className="text-primary/70" />
+            <span className="font-mono text-xs opacity-70">ID: {project.id.substring(0, 8)}...</span>
           </div>
         </div>
       </div>

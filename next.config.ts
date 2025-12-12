@@ -26,8 +26,31 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
-        // Apply to all routes
-        source: "/:path*",
+        // Apply CORS to API routes
+        source: "/api/:path*",
+        headers: [
+          { key: "Access-Control-Allow-Credentials", value: "true" },
+          { key: "Access-Control-Allow-Origin", value: "http://localhost:3000" }, // specific origin for credentials
+          { key: "Access-Control-Allow-Methods", value: "GET,DELETE,PATCH,POST,PUT" },
+          { key: "Access-Control-Allow-Headers", value: "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version" },
+        ],
+      },
+      {
+        // Apply strict security headers to playground routes
+        source: "/playground",
+        headers: [
+          {
+            key: "Cross-Origin-Opener-Policy",
+            value: "same-origin",
+          },
+          {
+            key: "Cross-Origin-Embedder-Policy",
+            value: "require-corp",
+          },
+        ],
+      },
+      {
+        source: "/playground/:path*",
         headers: [
           {
             key: "Cross-Origin-Opener-Policy",

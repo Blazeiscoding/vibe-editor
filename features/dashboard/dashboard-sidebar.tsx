@@ -62,7 +62,7 @@ export function DashboardSidebar({ initialPlaygroundData }: { initialPlaygroundD
   const [recentPlaygrounds, setRecentPlaygrounds] = useState(initialPlaygroundData)
 
   return (
-    <Sidebar variant="inset" collapsible="icon" className="border-1 border-r">
+    <Sidebar variant="inset" collapsible="icon" className="bg-transparent glass border-r-0">
       <SidebarHeader>
         <div className="flex items-center gap-2 px-4 py-3 justify-center">
           <Image src={"/logo.svg"} alt="logo" height={60} width={60} />

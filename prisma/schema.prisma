@@ -23,6 +23,7 @@ model User {
   id       String    @id @default(cuid()) @map("_id")
   name     String?
   email    String    @unique
+  emailVerified Boolean?
   image    String?
   accounts Account[]
   sessions Session[]
@@ -37,41 +38,54 @@ model User {
   updatedAt        DateTime     @updatedAt
 
   @@index([createdAt])
+  @@map("user")
 }
 
 model Account {
-  id                String  @id @default(cuid()) @map("_id")
-  userId            String  @map("user_id")
-  type              String
-  provider          String
-  providerAccountId String
-  refreshToken      String? @map("refresh_token")
-  accessToken       String? @map("access_token")
-  expiresAt         DateTime?    @map("expires_at")
-  tokenType         String? @map("token_type")
-  scope             String?
-  idToken           String? @map("id_token")
-  sessionState      String? @map("session_state")
+  id                    String    @id @default(cuid()) @map("_id")
+  userId                String    @map("user_id")
+  accountId             String    @map("account_id")
+  providerId            String    @map("provider_id")
+  accessToken           String?   @map("access_token")
+  refreshToken          String?   @map("refresh_token")
+  accessTokenExpiresAt  DateTime? @map("access_token_expires_at")
+  refreshTokenExpiresAt DateTime? @map("refresh_token_expires_at")
+  scope                 String?
+  idToken               String?   @map("id_token")
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([provider, providerAccountId])
-  @@index([userId])
+  @@map("account")
 }
 
 model Session {
   id        String   @id @default(cuid()) @map("_id")
   userId    String   @map("user_id")
+  token     String   
   expiresAt DateTime @map("expires_at")
-  token     String   @unique
-  ipAddress String?  @map("ip_address")
-  userAgent String?  @map("user_agent")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([userId])
+  @@unique([token])
+  @@map("session")
+}
+
+model Verification {
+  id         String    @id @default(cuid()) @map("_id")
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime? @default(now())
+  updatedAt  DateTime? @updatedAt
+
+  @@map("verification")
 }
 
 enum Templates {
@@ -120,5 +134,3 @@ model TemplateFile {
   playgroundId String     @unique
   playground   Playground @relation(fields: [playgroundId], references: [id], onDelete: Cascade)
 }
-
-// New model for AI chat messages

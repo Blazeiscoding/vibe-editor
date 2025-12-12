@@ -489,10 +489,26 @@ const WebContainerPreview: React.FC<WebContainerPreviewProps> = ({
       ) : (
         <div className="h-full flex flex-col">
           {/* Preview */}
-          <div className="flex-1">
+          <div className="flex-1 flex flex-col min-h-0 bg-background/50">
+            {/* Browser Frame */}
+            <div className="h-10 bg-muted/60 border-b flex items-center px-4 gap-3 select-none">
+              <div className="flex gap-1.5 opacity-80 hover:opacity-100 transition-opacity">
+                 <div className="w-3 h-3 rounded-full bg-red-400 border border-red-500/20" />
+                 <div className="w-3 h-3 rounded-full bg-yellow-400 border border-yellow-500/20" />
+                 <div className="w-3 h-3 rounded-full bg-green-400 border border-green-500/20" />
+              </div>
+              
+              <div className="flex-1 flex justify-center max-w-xl mx-auto">
+                 <div className="flex-1 bg-background/60 h-7 rounded-sm border border-border/50 flex items-center px-3 text-xs text-muted-foreground shadow-sm">
+                    <span className="opacity-50 mr-1">🔒</span> 
+                    {previewUrl}
+                 </div>
+              </div>
+            </div>
+
             <iframe
               src={previewUrl}
-              className="w-full h-full border-none"
+              className="flex-1 w-full h-full border-none bg-white"
               title="WebContainer Preview"
             />
           </div>
