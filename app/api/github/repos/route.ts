@@ -1,5 +1,5 @@
 import { auth } from "@/auth";
-import { db } from "@/lib/db";
+import { fetchGitHub, getGitHubToken } from "@/lib/github";
 import { rateLimit, rateLimitPresets } from "@/lib/rate-limit";
 import { headers } from "next/headers";
 import { NextRequest } from "next/server";
@@ -20,21 +20,13 @@ export async function GET(request: NextRequest) {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const account = await db.account.findFirst({
-      where: { userId, providerId: "github" },
-    });
-
-    const accessToken = account?.accessToken;
+    const accessToken = await getGitHubToken(userId);
     if (!accessToken) {
       return Response.json({ error: "GitHub not linked" }, { status: 400 });
     }
 
-    const res = await fetch("https://api.github.com/user/repos?per_page=100", {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        Accept: "application/vnd.github+json",
-      },
-      cache: "no-store",
+    const res = await fetchGitHub("https://api.github.com/user/repos?per_page=100", {
+      token: accessToken
     });
 
     if (!res.ok) {
