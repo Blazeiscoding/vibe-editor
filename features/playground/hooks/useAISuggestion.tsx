@@ -1,7 +1,7 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState, useRef, useCallback } from "react";
+import { useState, useCallback } from "react";
+import { loggers } from "@/lib/logger";
+
+const log = loggers.suggestions;
 
 interface AISuggestionsState {
   suggestion: string | null;
@@ -13,9 +13,13 @@ interface AISuggestionsState {
 
 interface UseAISuggestionsReturn extends AISuggestionsState {
   toggleEnabled: () => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   fetchSuggestion: (type: string, editor: any) => Promise<void>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   acceptSuggestion: (editor: any, monaco: any) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   rejectSuggestion: (editor: any) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   clearSuggestion: (editor: any) => void;
 }
 
@@ -29,24 +33,23 @@ export const useAISuggestions = (): UseAISuggestionsReturn => {
   });
 
   const toggleEnabled = useCallback(() => {
-    console.log("Toggling AI suggestions");
+    log.debug("Toggling AI suggestions");
     setState((prev) => ({ ...prev, isEnabled: !prev.isEnabled }));
   }, []);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const fetchSuggestion = useCallback(async (type: string, editor: any) => {
-    console.log("Fetching AI suggestion...");
-    console.log("AI Suggestions Enabled:", state.isEnabled);
-    console.log("Editor Instance Available:", !!editor);
+    log.debug("Fetching AI suggestion", { isEnabled: state.isEnabled, hasEditor: !!editor });
 
     // Use functional state update to get fresh state
     setState((currentState) => {
       if (!currentState.isEnabled) {
-        console.warn("AI suggestions are disabled.");
+        log.debug("AI suggestions are disabled");
         return currentState;
       }
 
       if (!editor) {
-        console.warn("Editor instance is not available.");
+        log.debug("Editor instance is not available");
         return currentState;
       }
 
@@ -54,7 +57,7 @@ export const useAISuggestions = (): UseAISuggestionsReturn => {
       const cursorPosition = editor.getPosition();
 
       if (!model || !cursorPosition) {
-        console.warn("Editor model or cursor position is not available.");
+        log.debug("Editor model or cursor position is not available");
         return currentState;
       }
 
@@ -70,7 +73,7 @@ export const useAISuggestions = (): UseAISuggestionsReturn => {
             cursorColumn: cursorPosition.column - 1,
             suggestionType: type,
           };
-          console.log("Request payload:", payload);
+          log.debug("Request payload", payload);
 
           const response = await fetch("/api/code-suggestion", {
             method: "POST",
@@ -83,7 +86,7 @@ export const useAISuggestions = (): UseAISuggestionsReturn => {
           }
 
           const data = await response.json();
-          console.log("API response:", data);
+          log.debug("API response", { hasSuggestion: !!data.suggestion });
 
           if (data.suggestion) {
             const suggestionText = data.suggestion.trim();
@@ -97,11 +100,11 @@ export const useAISuggestions = (): UseAISuggestionsReturn => {
               isLoading: false,
             }));
           } else {
-            console.warn("No suggestion received from API.");
+            log.debug("No suggestion received from API");
             setState((prev) => ({ ...prev, isLoading: false }));
           }
         } catch (error) {
-          console.error("Error fetching code suggestion:", error);
+          log.error("Error fetching code suggestion", { error });
           setState((prev) => ({ ...prev, isLoading: false }));
         }
       })();
@@ -111,6 +114,7 @@ export const useAISuggestions = (): UseAISuggestionsReturn => {
   }, []); // Remove state.isEnabled from dependencies to prevent stale closures
 
   const acceptSuggestion = useCallback(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (editor: any, monaco: any) => {
       setState((currentState) => {
         if (!currentState.suggestion || !currentState.position || !editor || !monaco) {
@@ -144,6 +148,7 @@ export const useAISuggestions = (): UseAISuggestionsReturn => {
     []
   );
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const rejectSuggestion = useCallback((editor: any) => {
     setState((currentState) => {
       if (editor && currentState.decoration.length > 0) {
@@ -158,6 +163,7 @@ export const useAISuggestions = (): UseAISuggestionsReturn => {
     });
   }, []);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const clearSuggestion = useCallback((editor: any) => {
     setState((currentState) => {
       if (editor && currentState.decoration.length > 0) {

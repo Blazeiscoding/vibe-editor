@@ -1,6 +1,3 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import React, { useEffect, useState, useRef } from "react";
@@ -11,6 +8,9 @@ import { CheckCircle, Loader2, XCircle } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { WebContainer } from "@webcontainer/api";
 import { TerminalSkeleton } from "@/components/loading/terminal-skeleton";
+import { loggers } from "@/lib/logger";
+
+const log = loggers.webcontainer;
 
 // Dynamically import Terminal component with no SSR for code splitting
 const TerminalComponent = dynamic(
@@ -55,6 +55,7 @@ const WebContainerPreview: React.FC<WebContainerPreviewProps> = ({
   const [isSetupInProgress, setIsSetupInProgress] = useState(false);
 
   // Ref to access terminal methods
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const terminalRef = useRef<any>(null);
 
   // Reset setup state when forceResetup changes
@@ -99,7 +100,7 @@ const WebContainerPreview: React.FC<WebContainerPreviewProps> = ({
 
             // Check if server is already running
             instance.on("server-ready", (port: number, url: string) => {
-              console.log(`Reconnected to server on port ${port} at ${url}`);
+              log.info(`Reconnected to server on port ${port}`, { url });
               if (terminalRef.current?.writeToTerminal) {
                 terminalRef.current.writeToTerminal(
                   `🌐 Reconnected to server at ${url}\r\n`
@@ -134,7 +135,7 @@ const WebContainerPreview: React.FC<WebContainerPreviewProps> = ({
           );
         }
 
-        // @ts-ignore
+        // @ts-expect-error - transformToWebContainerFormat types are complex
         const files = transformToWebContainerFormat(templateData);
 
         setLoadingState((prev) => ({
@@ -331,7 +332,7 @@ const WebContainerPreview: React.FC<WebContainerPreviewProps> = ({
 
         // Listen for server ready event
         instance.on("server-ready", (port: number, url: string) => {
-          console.log(`Server ready on port ${port} at ${url}`);
+          log.info(`Server ready on port ${port}`, { url });
           if (terminalRef.current?.writeToTerminal) {
             terminalRef.current.writeToTerminal(
               `🌐 Server ready at ${url}\r\n`
@@ -358,7 +359,7 @@ const WebContainerPreview: React.FC<WebContainerPreviewProps> = ({
           })
         );
       } catch (err) {
-        console.error("Error setting up container:", err);
+        log.error("Error setting up container", { error: err });
         const errorMessage = err instanceof Error ? err.message : String(err);
 
         if (terminalRef.current?.writeToTerminal) {
