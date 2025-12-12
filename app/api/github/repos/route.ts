@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     }
 
     const account = await db.account.findFirst({
-      where: { userId, provider: "github" },
+      where: { userId, providerId: "github" },
     });
 
     const accessToken = account?.accessToken;
