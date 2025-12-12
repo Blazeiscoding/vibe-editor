@@ -1,18 +1,13 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import {
   getPlaygroundById,
   SaveUpdatedCode,
 } from "@/features/playground/actions";
-import type { TemplateFolder } from "@/features/playground/libs/path-to-json";
+import type { TemplateFolder, PlaygroundData } from "@/features/playground/types";
+import { loggers } from "@/lib/logger";
 
-interface PlaygroundData {
-  id: string;
-  name?: string;
-  [key: string]: any;
-}
+const log = loggers.dashboard;
 
 interface UsePlaygroundReturn {
   playgroundData: PlaygroundData | null;
@@ -40,8 +35,10 @@ export const usePlayground = (id: string): UsePlaygroundReturn => {
 
       const data = await getPlaygroundById(id);
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       setPlaygroundData((data as any) ?? null);
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const rawContent = (data as any)?.templateFiles?.[0]?.content;
       if (typeof rawContent === "string") {
         const parsedContent = JSON.parse(rawContent);
@@ -71,7 +68,7 @@ export const usePlayground = (id: string): UsePlaygroundReturn => {
 
       toast.success("Template loaded successfully");
     } catch (error) {
-      console.error("Error loading playground:", error);
+      log.error("Error loading playground", { error });
       setError("Failed to load playground data");
       toast.error("Failed to load playground data");
     } finally {
@@ -86,7 +83,7 @@ export const usePlayground = (id: string): UsePlaygroundReturn => {
         setTemplateData(data);
         toast.success("Changes saved successfully");
       } catch (error) {
-        console.error("Error saving template data:", error);
+        log.error("Error saving template data", { error });
         toast.error("Failed to save changes");
         throw error;
       }

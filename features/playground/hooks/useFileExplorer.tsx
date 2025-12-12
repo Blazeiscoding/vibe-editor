@@ -1,12 +1,12 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { create } from "zustand";
 
 import { toast } from "sonner";
-import { TemplateFile, TemplateFolder } from "../types";
+import { TemplateFile, TemplateFolder, OpenFile } from "../types";
 import { SaveUpdatedCode } from "../actions";
 import { generateFileId } from "../libs";
-import { usePlayground } from "./usePlayground";
+import { loggers } from "@/lib/logger";
+
+const log = loggers.fileExplorer;
 
 interface FileExplorerState {
   playgroundId: string;
@@ -28,12 +28,14 @@ interface FileExplorerState {
     newFile: TemplateFile,
     parentPath: string,
     writeFileSync: (filePath: string, content: string) => Promise<void>,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     instance: any,
     saveTemplateData: (data: TemplateFolder) => Promise<void>
   ) => Promise<void>;
   handleAddFolder: (
     newFolder: TemplateFolder, 
     parentPath: string, 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     instance: any, 
     saveTemplateData: (data: TemplateFolder) => Promise<void>
   ) => Promise<void>;
@@ -63,12 +65,6 @@ interface FileExplorerState {
   updateFileContent: (fileId: string, content: string) => void;
 }
 
-interface OpenFile extends TemplateFile {
-  id: string;
-  hasUnsavedChanges: boolean;
-  content: string;
-  originalContent: string;
-}
 
 export const useFileExplorer = create<FileExplorerState>((set, get) => ({
   templateData: null,
@@ -181,7 +177,7 @@ export const useFileExplorer = create<FileExplorerState>((set, get) => ({
 
       get().openFile(newFile);
     } catch (error) {
-      console.error("Error adding file:", error);
+      log.error("Error adding file", { error });
       toast.error("Failed to create file");
     }
   },
@@ -219,7 +215,7 @@ export const useFileExplorer = create<FileExplorerState>((set, get) => ({
         await instance.fs.mkdir(folderPath, { recursive: true });
       }
     } catch (error) {
-      console.error("Error adding folder:", error);
+      log.error("Error adding folder", { error });
       toast.error("Failed to create folder");
     }
   },
@@ -267,7 +263,7 @@ export const useFileExplorer = create<FileExplorerState>((set, get) => ({
       await saveTemplateData(updatedTemplateData);
       toast.success(`Deleted file: ${file.filename}.${file.fileExtension}`);
     } catch (error) {
-      console.error("Error deleting file:", error);
+      log.error("Error deleting file", { error });
       toast.error("Failed to delete file");
     }
   },
@@ -319,7 +315,7 @@ export const useFileExplorer = create<FileExplorerState>((set, get) => ({
       await saveTemplateData(updatedTemplateData);
       toast.success(`Deleted folder: ${folder.folderName}`);
     } catch (error) {
-      console.error("Error deleting folder:", error);
+      log.error("Error deleting folder", { error });
       toast.error("Failed to delete folder");
     }
   },
@@ -393,7 +389,7 @@ export const useFileExplorer = create<FileExplorerState>((set, get) => ({
         toast.success(`Renamed file to: ${newFilename}.${newExtension}`);
       }
     } catch (error) {
-      console.error("Error renaming file:", error);
+      log.error("Error renaming file", { error });
       toast.error("Failed to rename file");
     }
   },
@@ -436,7 +432,7 @@ export const useFileExplorer = create<FileExplorerState>((set, get) => ({
         toast.success(`Renamed folder to: ${newFolderName}`);
       }
     } catch (error) {
-      console.error("Error renaming folder:", error);
+      log.error("Error renaming folder", { error });
       toast.error("Failed to rename folder");
     }
   },

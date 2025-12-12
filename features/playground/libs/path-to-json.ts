@@ -1,30 +1,12 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { loggers } from "@/lib/logger";
+import type { TemplateFile, TemplateFolder, TemplateItem } from "../types";
 
 const log = loggers.fileExplorer;
 
-/**
- * Represents a file in the template structure
- */
-export interface TemplateFile {
-  filename: string;
-  fileExtension: string;
-  content: string;
-}
-
-/**
- * Represents a folder in the template structure which can contain files and other folders
- */
-export interface TemplateFolder {
-  folderName: string;
-  items: (TemplateFile | TemplateFolder)[];
-}
-
-/**
- * Type representing either a file or folder in the template structure
- */
-export type TemplateItem = TemplateFile | TemplateFolder;
+// Re-export types from central types file
+export type { TemplateFile, TemplateFolder, TemplateItem } from "../types";
 
 /**
  * Options for scanning template directories
