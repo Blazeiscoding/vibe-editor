@@ -1,6 +1,3 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useRef, useEffect, useCallback } from "react";
@@ -12,8 +9,15 @@ import {
   getEditorLanguage,
 } from "@/features/playground/libs/editor-config";
 import type { TemplateFile } from "@/features/playground/libs/path-to-json";
+import { loggers } from "@/lib/logger";
 
 import { EditorSkeleton } from "@/components/loading/editor-skeleton";
+
+const log = loggers.editor;
+
+// Type aliases for Monaco instances (flexible to avoid type conflicts)
+type EditorInstance = ReturnType<typeof import("monaco-editor").editor.create> & Record<string, unknown>;
+type MonacoInstance = typeof import("monaco-editor");
 
 // Dynamically import Monaco Editor with no SSR
 const MonacoEditor = dynamic(() => import("@monaco-editor/react"), {
@@ -28,8 +32,11 @@ interface PlaygroundEditorProps {
   suggestion: string | null;
   suggestionLoading: boolean;
   suggestionPosition: { line: number; column: number } | null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onAcceptSuggestion: (editor: any, monaco: any) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onRejectSuggestion: (editor: any) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onTriggerSuggestion: (type: string, editor: any) => void;
 }
 
@@ -44,8 +51,11 @@ export const PlaygroundEditor = ({
   onRejectSuggestion,
   onTriggerSuggestion,
 }: PlaygroundEditorProps) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const editorRef = useRef<any>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const monacoRef = useRef<any>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const inlineCompletionProviderRef = useRef<any>(null);
   const currentSuggestionRef = useRef<{
     text: string;
@@ -55,6 +65,7 @@ export const PlaygroundEditor = ({
   const isAcceptingSuggestionRef = useRef(false);
   const suggestionAcceptedRef = useRef(false);
   const suggestionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const tabCommandRef = useRef<any>(null);
 
   // Generate unique ID for each suggestion

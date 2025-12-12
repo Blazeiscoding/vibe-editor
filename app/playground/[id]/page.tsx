@@ -41,7 +41,7 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
-import WebContainerPreview from "@/features/webcontainers/components/webcontainer-preveiw";
+import WebContainerPreview from "@/features/webcontainers/components/webcontainer-preview";
 
 import { PlaygroundEditor } from "@/features/playground/components/playground-editor";
 import { useFileExplorer } from "@/features/playground/hooks/useFileExplorer";
