@@ -1,8 +1,16 @@
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
+import { rateLimit, rateLimitPresets } from "@/lib/rate-limit";
 import { headers } from "next/headers";
+import { NextRequest } from "next/server";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  // Apply rate limiting
+  const rateLimitResult = rateLimit(request, rateLimitPresets.default);
+  if (!rateLimitResult.allowed) {
+    return rateLimitResult.response;
+  }
+
   try {
     const session = await auth.api.getSession({
       headers: (await headers()) as unknown as Headers,

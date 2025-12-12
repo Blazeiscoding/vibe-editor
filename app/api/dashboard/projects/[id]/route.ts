@@ -1,13 +1,20 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
+import { rateLimit, rateLimitPresets } from "@/lib/rate-limit";
 import { revalidatePath } from "next/cache";
-import type { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Apply rate limiting (strict for mutations)
+  const rateLimitResult = rateLimit(request, rateLimitPresets.strict);
+  if (!rateLimitResult.allowed) {
+    return rateLimitResult.response;
+  }
+
   try {
     const session = await auth.api.getSession({
       headers: request.headers as unknown as Headers,
@@ -43,6 +50,12 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Apply rate limiting (strict for mutations)
+  const rateLimitResult = rateLimit(request, rateLimitPresets.strict);
+  if (!rateLimitResult.allowed) {
+    return rateLimitResult.response;
+  }
+
   try {
     const session = await auth.api.getSession({
       headers: request.headers as unknown as Headers,
