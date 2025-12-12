@@ -1,4 +1,5 @@
 import { SidebarProvider } from "@/components/ui/sidebar";
+import { PlaygroundErrorBoundary } from "@/components/feature-error-boundary";
 import React from "react";
 
 export default function PlaygroundLayout({
@@ -8,7 +9,9 @@ export default function PlaygroundLayout({
 }) {
   return (
     <SidebarProvider>
-      {children}
+      <PlaygroundErrorBoundary>
+        {children}
+      </PlaygroundErrorBoundary>
     </SidebarProvider>
   );
 }

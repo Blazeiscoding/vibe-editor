@@ -1,6 +1,7 @@
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { DashboardSidebar } from "@/features/dashboard/dashboard-sidebar";
 import { getAllPlaygroundForUser } from "@/features/playground/actions";
+import { DashboardErrorBoundary } from "@/components/feature-error-boundary";
 
 import type React from "react";
 
@@ -38,7 +39,11 @@ export default async function DashboardLayout({
       <div className="flex min-h-screen w-full overflow-x-hidden">
         {/* Pass the formatted data with string icon names */}
         <DashboardSidebar initialPlaygroundData={formattedPlaygroundData} />
-        <main className="flex-1">{children}</main>
+        <main className="flex-1">
+          <DashboardErrorBoundary>
+            {children}
+          </DashboardErrorBoundary>
+        </main>
       </div>
     </SidebarProvider>
   );
