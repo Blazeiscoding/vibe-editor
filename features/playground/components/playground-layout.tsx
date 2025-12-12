@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { AlertCircle, Loader2 } from "lucide-react";
@@ -70,6 +69,7 @@ export function PlaygroundLayout() {
   return (
     <div className="h-screen flex flex-col">
       <PlaygroundHeader />
+      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
       <PlaygroundEditorClient templateData={templateData as any} />
     </div>
   );
