@@ -10,17 +10,30 @@ const AddRepo = () => {
   return (
     <div
       onClick={() => setOpen(true)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          setOpen(true);
+        }
+      }}
+      role="button"
+      tabIndex={0}
+      aria-label="Import a GitHub repository"
+      aria-haspopup="dialog"
       className="group px-6 py-6 flex flex-row justify-between items-center border rounded-lg bg-muted cursor-pointer 
       transition-all duration-300 ease-in-out
       hover:bg-background hover:border-[#E93F3F] hover:scale-[1.02]
       shadow-[0_2px_10px_rgba(0,0,0,0.08)]
-      hover:shadow-[0_10px_30px_rgba(233,63,63,0.15)]"
+      hover:shadow-[0_10px_30px_rgba(233,63,63,0.15)]
+      focus:outline-none focus:ring-2 focus:ring-[#E93F3F] focus:ring-offset-2"
     >
       <div className="flex flex-row justify-center items-start gap-4">
         <Button
           variant={"outline"}
           className="flex justify-center items-center bg-white group-hover:bg-[#fff8f8] group-hover:border-[#E93F3F] group-hover:text-[#E93F3F] transition-colors duration-300"
           size={"icon"}
+          aria-hidden="true"
+          tabIndex={-1}
         >
           <ArrowDown
             size={30}
@@ -37,10 +50,10 @@ const AddRepo = () => {
         </div>
       </div>
 
-      <div className="relative overflow-hidden">
+      <div className="relative overflow-hidden" aria-hidden="true">
         <Image
           src={"/github.svg"}
-          alt="Open GitHub repository"
+          alt=""
           width={150}
           height={150}
           className="transition-transform duration-300 group-hover:scale-110"

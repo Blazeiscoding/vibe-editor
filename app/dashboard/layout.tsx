@@ -39,7 +39,7 @@ export default async function DashboardLayout({
       <div className="flex min-h-screen w-full overflow-x-hidden">
         {/* Pass the formatted data with string icon names */}
         <DashboardSidebar initialPlaygroundData={formattedPlaygroundData} />
-        <main className="flex-1">
+        <main id="main-content" className="flex-1">
           <DashboardErrorBoundary>
             {children}
           </DashboardErrorBoundary>

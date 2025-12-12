@@ -6,6 +6,7 @@ import { Analytics } from "@vercel/analytics/next";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { Toaster } from "@/components/ui/sonner";
 import { ServiceWorkerRegistration } from "@/components/service-worker-registration";
+import { SkipLink } from "@/components/skip-link";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -74,6 +75,7 @@ export default async function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <SkipLink />
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
