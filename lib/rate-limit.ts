@@ -151,30 +151,6 @@ export function createRateLimitResponse(
 }
 
 /**
- * Higher-order function to wrap an API route handler with rate limiting
- * @example
- * export const GET = withRateLimit(async (request) => {
- *   // Your handler logic
- *   return NextResponse.json({ data: 'success' });
- * });
- */
-export function withRateLimit<T extends NextRequest>(
-  handler: (request: T, ...args: unknown[]) => Promise<NextResponse>,
-  config: RateLimitConfig = rateLimitPresets.default
-) {
-  return async (request: T, ...args: unknown[]): Promise<NextResponse> => {
-    const rateLimitInfo = checkRateLimit(request, config);
-    
-    if (!rateLimitInfo.allowed) {
-      return createRateLimitResponse(rateLimitInfo);
-    }
-    
-    const response = await handler(request, ...args);
-    return applyRateLimitHeaders(response, rateLimitInfo);
-  };
-}
-
-/**
  * Simple rate limit check that can be used inline in route handlers
  * @example
  * export async function GET(request: NextRequest) {
