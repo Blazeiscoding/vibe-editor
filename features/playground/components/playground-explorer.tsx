@@ -30,21 +30,7 @@ import NewFolderDialog from "./dialogs/new-folder-dialog"
 import NewFileDialog from "./dialogs/new-file-dialog"
 import RenameFileDialog from "./dialogs/rename-file-dialog"
 import { DeleteDialog } from "./dialogs/delete-dialog"
-
-// Using the provided interfaces
-interface TemplateFile {
-  filename: string
-  fileExtension: string
-  content: string
-}
-
-/**
- * Represents a folder in the template structure which can contain files and other folders
- */
-interface TemplateFolder {
-  folderName: string
-  items: (TemplateFile | TemplateFolder)[]
-}
+import { TemplateFile, TemplateFolder } from "../types"
 
 // Union type for items in the file system
 type TemplateItem = TemplateFile | TemplateFolder
