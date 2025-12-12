@@ -1,8 +1,10 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useState, useEffect, useCallback } from "react";
 import { WebContainer } from "@webcontainer/api";
 import WebContainerService from "../service/webContainerService";
 import { TemplateFolder } from "@/features/playground/libs/path-to-json";
+import { loggers } from "@/lib/logger";
+
+const log = loggers.webcontainer;
 
 interface UseWebContainerProps {
   templateData: TemplateFolder;
@@ -36,7 +38,7 @@ export const useWebContainer = ({
         setInstance(webcontainerInstance);
         setIsLoading(false);
       } catch (err) {
-        console.error("Failed to initialize WebContainer:", err);
+        log.error("Failed to initialize WebContainer", { error: err });
         if (mounted) {
           setError(
             err instanceof Error
@@ -73,7 +75,7 @@ export const useWebContainer = ({
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : "Failed to write file";
-        console.error(`Failed to write file at ${path}:`, err);
+        log.error(`Failed to write file at ${path}`, { error: err });
         throw new Error(`Failed to write file at ${path}: ${errorMessage}`);
       }
     },

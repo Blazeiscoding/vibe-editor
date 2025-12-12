@@ -1,6 +1,8 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import * as fs from 'fs';
 import * as path from 'path';
+import { loggers } from "@/lib/logger";
+
+const log = loggers.fileExplorer;
 
 /**
  * Represents a file in the template structure
@@ -153,7 +155,7 @@ async function processDirectory(
       if (entry.isDirectory()) {
         // Skip ignored folders
         if (options.ignoreFolders?.includes(entryName)) {
-          console.log(`Skipping ignored folder: ${entryPath}`);
+          log.debug(`Skipping ignored folder: ${entryPath}`);
           continue;
         }
         
@@ -163,14 +165,14 @@ async function processDirectory(
       } else if (entry.isFile()) {
         // Skip ignored files
         if (options.ignoreFiles?.includes(entryName)) {
-          console.log(`Skipping ignored file: ${entryPath}`);
+          log.debug(`Skipping ignored file: ${entryPath}`);
           continue;
         }
         
         // Check against regex patterns
         const shouldSkip = options.ignorePatterns?.some(pattern => pattern.test(entryName));
         if (shouldSkip) {
-          console.log(`Skipping file matching ignore pattern: ${entryPath}`);
+          log.debug(`Skipping file matching ignore pattern: ${entryPath}`);
           continue;
         }
         
@@ -193,7 +195,7 @@ async function processDirectory(
             content
           });
         } catch (error) {
-          console.error(`Error reading file ${entryPath}:`, error);
+          log.error(`Error reading file ${entryPath}`, { error });
           // Still include the file but with an error message as content
           const parsedPath = path.parse(entryName);
           items.push({
@@ -243,7 +245,7 @@ export async function saveTemplateStructureToJson(
       JSON.stringify(templateStructure, null, 2),
       'utf8'
     );
-    console.log(`Template structure saved to ${outputPath}`);
+    log.info(`Template structure saved to ${outputPath}`);
 
 
     
