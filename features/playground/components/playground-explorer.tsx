@@ -25,10 +25,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
-import RenameFolderDialog from "./dialogs/rename-folder-dialog"
-import NewFolderDialog from "./dialogs/new-folder-dialog"
-import NewFileDialog from "./dialogs/new-file-dialog"
-import RenameFileDialog from "./dialogs/rename-file-dialog"
+import { InputDialog, InputDialogMode } from "./dialogs/input-dialog"
 import { DeleteDialog } from "./dialogs/delete-dialog"
 import { TemplateFile, TemplateFolder } from "../types"
 
@@ -61,38 +58,21 @@ export function TemplateFileTree({
   onRenameFolder,
 }: TemplateFileTreeProps) {
   const isRootFolder = data && typeof data === "object" && "folderName" in data
-  const [isNewFileDialogOpen, setIsNewFileDialogOpen] = React.useState(false)
-  const [isNewFolderDialogOpen, setIsNewFolderDialogOpen] = React.useState(false)
+  const [dialogMode, setDialogMode] = React.useState<InputDialogMode | null>(null)
 
-  const handleAddRootFile = () => {
-    setIsNewFileDialogOpen(true)
-  }
-
-  const handleAddRootFolder = () => {
-    setIsNewFolderDialogOpen(true)
-  }
+  const handleAddRootFile = () => setDialogMode("new-file")
+  const handleAddRootFolder = () => setDialogMode("new-folder")
 
   const handleCreateFile = (filename: string, extension: string) => {
     if (onAddFile && isRootFolder) {
-      const newFile: TemplateFile = {
-        filename,
-        fileExtension: extension,
-        content: "",
-      }
-      onAddFile(newFile, "")
+      onAddFile({ filename, fileExtension: extension, content: "" }, "")
     }
-    setIsNewFileDialogOpen(false)
   }
 
   const handleCreateFolder = (folderName: string) => {
     if (onAddFolder && isRootFolder) {
-      const newFolder: TemplateFolder = {
-        folderName,
-        items: [],
-      }
-      onAddFolder(newFolder, "")
+      onAddFolder({ folderName, items: [] }, "")
     }
-    setIsNewFolderDialogOpen(false)
   }
 
   return (
@@ -157,15 +137,11 @@ export function TemplateFileTree({
       </SidebarContent>
       <SidebarRail />
 
-      <NewFileDialog
-        isOpen={isNewFileDialogOpen}
-        onClose={() => setIsNewFileDialogOpen(false)}
+      <InputDialog
+        isOpen={dialogMode !== null}
+        onClose={() => setDialogMode(null)}
+        mode={dialogMode || "new-file"}
         onCreateFile={handleCreateFile}
-      />
-
-      <NewFolderDialog
-        isOpen={isNewFolderDialogOpen}
-        onClose={() => setIsNewFolderDialogOpen(false)}
         onCreateFolder={handleCreateFolder}
       />
     </Sidebar>
@@ -201,9 +177,7 @@ function TemplateNode({
 }: TemplateNodeProps) {
   const isValidItem = item && typeof item === "object"
   const isFolder = isValidItem && "folderName" in item
-  const [isNewFileDialogOpen, setIsNewFileDialogOpen] = React.useState(false)
-  const [isNewFolderDialogOpen, setIsNewFolderDialogOpen] = React.useState(false)
-  const [isRenameDialogOpen, setIsRenameDialogOpen] = React.useState(false)
+  const [dialogMode, setDialogMode] = React.useState<InputDialogMode | null>(null)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false)
   const [isOpen, setIsOpen] = React.useState(level < 2)
 
@@ -216,13 +190,9 @@ function TemplateNode({
     const isSelected =
       selectedFile && selectedFile.filename === file.filename && selectedFile.fileExtension === file.fileExtension
 
-    const handleRename = () => {
-      setIsRenameDialogOpen(true)
-    }
+    const handleRename = () => setDialogMode("rename-file")
 
-    const handleDelete = () => {
-      setIsDeleteDialogOpen(true)
-    }
+    const handleDelete = () => setIsDeleteDialogOpen(true)
 
     const confirmDelete = () => {
       onDeleteFile?.(file, path)
@@ -231,7 +201,6 @@ function TemplateNode({
 
     const handleRenameSubmit = (newFilename: string, newExtension: string) => {
       onRenameFile?.(file, newFilename, newExtension, path)
-      setIsRenameDialogOpen(false)
     }
 
     return (
@@ -266,12 +235,13 @@ function TemplateNode({
           </DropdownMenu>
         </div>
 
-        <RenameFileDialog
-          isOpen={isRenameDialogOpen}
-          onClose={() => setIsRenameDialogOpen(false)}
-          onRename={handleRenameSubmit}
+        <InputDialog
+          isOpen={dialogMode === "rename-file"}
+          onClose={() => setDialogMode(null)}
+          mode="rename-file"
           currentFilename={file.filename}
           currentExtension={file.fileExtension}
+          onRenameFile={handleRenameSubmit}
         />
 
       <DeleteDialog
@@ -291,21 +261,10 @@ function TemplateNode({
     const folderName = folder.folderName
     const currentPath = path ? `${path}/${folderName}` : folderName
 
-    const handleAddFile = () => {
-      setIsNewFileDialogOpen(true)
-    }
-
-    const handleAddFolder = () => {
-      setIsNewFolderDialogOpen(true)
-    }
-
-    const handleRename = () => {
-      setIsRenameDialogOpen(true)
-    }
-
-    const handleDelete = () => {
-      setIsDeleteDialogOpen(true)
-    }
+    const handleAddFile = () => setDialogMode("new-file")
+    const handleAddFolder = () => setDialogMode("new-folder")
+    const handleRename = () => setDialogMode("rename-folder")
+    const handleDelete = () => setIsDeleteDialogOpen(true)
 
     const confirmDelete = () => {
       onDeleteFolder?.(folder, path)
@@ -314,30 +273,18 @@ function TemplateNode({
 
     const handleCreateFile = (filename: string, extension: string) => {
       if (onAddFile) {
-        const newFile: TemplateFile = {
-          filename,
-          fileExtension: extension,
-          content: "",
-        }
-        onAddFile(newFile, currentPath)
+        onAddFile({ filename, fileExtension: extension, content: "" }, currentPath)
       }
-      setIsNewFileDialogOpen(false)
     }
 
-    const handleCreateFolder = (folderName: string) => {
+    const handleCreateFolder = (name: string) => {
       if (onAddFolder) {
-        const newFolder: TemplateFolder = {
-          folderName,
-          items: [],
-        }
-        onAddFolder(newFolder, currentPath)
+        onAddFolder({ folderName: name, items: [] }, currentPath)
       }
-      setIsNewFolderDialogOpen(false)
     }
 
     const handleRenameSubmit = (newFolderName: string) => {
       onRenameFolder?.(folder, newFolderName, path)
-      setIsRenameDialogOpen(false)
     }
 
     return (
@@ -411,22 +358,13 @@ function TemplateNode({
           </CollapsibleContent>
         </Collapsible>
 
-        <NewFileDialog
-          isOpen={isNewFileDialogOpen}
-          onClose={() => setIsNewFileDialogOpen(false)}
+        <InputDialog
+          isOpen={dialogMode !== null}
+          onClose={() => setDialogMode(null)}
+          mode={dialogMode || "new-file"}
           onCreateFile={handleCreateFile}
-        />
-
-        <NewFolderDialog
-          isOpen={isNewFolderDialogOpen}
-          onClose={() => setIsNewFolderDialogOpen(false)}
           onCreateFolder={handleCreateFolder}
-        />
-
-        <RenameFolderDialog
-          isOpen={isRenameDialogOpen}
-          onClose={() => setIsRenameDialogOpen(false)}
-          onRename={handleRenameSubmit}
+          onRenameFolder={handleRenameSubmit}
           currentFolderName={folderName}
         />
 
