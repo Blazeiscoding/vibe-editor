@@ -234,7 +234,7 @@ export const configureMonaco = (monaco: Monaco) => {
   });
 
   // Set compiler options for better IntelliSense
-  monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
+  const commonCompilerOptions = {
     target: monaco.languages.typescript.ScriptTarget.Latest,
     allowNonTsExtensions: true,
     moduleResolution: monaco.languages.typescript.ModuleResolutionKind.NodeJs,
@@ -245,20 +245,12 @@ export const configureMonaco = (monaco: Monaco) => {
     reactNamespace: "React",
     allowJs: true,
     typeRoots: ["node_modules/@types"],
-  });
+  };
 
+  monaco.languages.typescript.javascriptDefaults.setCompilerOptions(commonCompilerOptions);
   monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
-    target: monaco.languages.typescript.ScriptTarget.Latest,
-    allowNonTsExtensions: true,
-    moduleResolution: monaco.languages.typescript.ModuleResolutionKind.NodeJs,
-    module: monaco.languages.typescript.ModuleKind.CommonJS,
-    noEmit: true,
-    esModuleInterop: true,
+    ...commonCompilerOptions,
     allowSyntheticDefaultImports: true,
-    jsx: monaco.languages.typescript.JsxEmit.React,
-    reactNamespace: "React",
-    allowJs: true,
-    typeRoots: ["node_modules/@types"],
   });
 };
 
