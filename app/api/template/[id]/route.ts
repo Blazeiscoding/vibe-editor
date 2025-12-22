@@ -4,6 +4,7 @@ import {
 } from "@/features/playground/libs/path-to-json";
 import { db } from "@/lib/db";
 import { templatePaths } from "@/lib/template";
+import { idParamSchema, validateParams } from "@/lib/validations";
 import path from "path";
 import fs from "fs/promises";
 import { NextRequest } from "next/server";
@@ -23,29 +24,33 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const param = await params;
-  const id = param.id;
-
-  if (!id) {
-    return Response.json({ error: "Missing playground ID" }, { status: 400 });
-  }
-
-  const playground = await db.playground.findUnique({
-    where: { id },
-  });
-
-  if (!playground) {
-    return Response.json({ error: "Playground not found" }, { status: 404 });
-  }
-
-  const templateKey = playground.template as keyof typeof templatePaths;
-  const templatePath = templatePaths[templateKey];
-
-  if (!templatePath) {
-    return Response.json({ error: "Invalid template" }, { status: 404 });
-  }
-
   try {
+    // Validate route params
+    const resolvedParams = await params;
+    const paramsValidation = validateParams(resolvedParams, idParamSchema);
+    if (!paramsValidation.success) {
+      return paramsValidation.response;
+    }
+    const { id } = paramsValidation.data;
+
+    // Find playground in database
+    const playground = await db.playground.findUnique({
+      where: { id },
+    });
+
+    if (!playground) {
+      return Response.json({ error: "Playground not found" }, { status: 404 });
+    }
+
+    // Get template path
+    const templateKey = playground.template as keyof typeof templatePaths;
+    const templatePath = templatePaths[templateKey];
+
+    if (!templatePath) {
+      return Response.json({ error: "Invalid template" }, { status: 404 });
+    }
+
+    // Generate template structure
     const inputPath = path.join(process.cwd(), templatePath);
     const outputFile = path.join(process.cwd(), `output/${templateKey}.json`);
 
@@ -63,7 +68,8 @@ export async function GET(
         { status: 500 }
       );
     }
-  
+
+    // Cleanup temp file
     await fs.unlink(outputFile);
 
     return Response.json(

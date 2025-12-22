@@ -12,6 +12,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    // Authenticate user
     const session = await auth.api.getSession({
       headers: (await headers()) as unknown as Headers,
     });
@@ -20,18 +21,25 @@ export async function GET(request: NextRequest) {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // Check GitHub connection
     const accessToken = await getGitHubToken(userId);
     if (!accessToken) {
       return Response.json({ error: "GitHub not linked" }, { status: 400 });
     }
 
-    const res = await fetchGitHub("https://api.github.com/user/repos?per_page=100", {
-      token: accessToken
-    });
+    // Fetch repositories from GitHub
+    const res = await fetchGitHub(
+      "https://api.github.com/user/repos?per_page=100",
+      { token: accessToken }
+    );
 
     if (!res.ok) {
       const text = await res.text();
-      return Response.json({ error: text }, { status: res.status });
+      console.error("GitHub API error:", text);
+      return Response.json(
+        { error: "Failed to fetch repositories from GitHub" },
+        { status: res.status }
+      );
     }
 
     const data = (await res.json()) as Array<{
@@ -43,6 +51,8 @@ export async function GET(request: NextRequest) {
       owner?: { login?: string };
       default_branch?: string;
     }>;
+
+    // Transform response
     const repos = data.map((r) => ({
       id: r.id,
       name: r.name,
@@ -54,7 +64,8 @@ export async function GET(request: NextRequest) {
     }));
 
     return Response.json({ repos });
-  } catch {
+  } catch (error) {
+    console.error("Failed to fetch repositories:", error);
     return Response.json(
       { error: "Failed to fetch repositories" },
       { status: 500 }

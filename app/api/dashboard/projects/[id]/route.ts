@@ -1,9 +1,14 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { rateLimit, rateLimitPresets } from "@/lib/rate-limit";
+import {
+  updateProjectSchema,
+  idParamSchema,
+  validateRequestBody,
+  validateParams,
+} from "@/lib/validations";
 import { revalidatePath } from "next/cache";
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 
 export async function PUT(
   request: NextRequest,
@@ -16,6 +21,7 @@ export async function PUT(
   }
 
   try {
+    // Authenticate user
     const session = await auth.api.getSession({
       headers: request.headers as unknown as Headers,
     });
@@ -23,17 +29,22 @@ export async function PUT(
       return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const body = await request.json().catch(() => ({}));
-    const { id } = await params;
-    const { title, description } = body as {
-      title?: string;
-      description?: string;
-    };
-
-    if (!title || typeof title !== "string") {
-      return Response.json({ error: "Invalid title" }, { status: 400 });
+    // Validate route params
+    const resolvedParams = await params;
+    const paramsValidation = validateParams(resolvedParams, idParamSchema);
+    if (!paramsValidation.success) {
+      return paramsValidation.response;
     }
+    const { id } = paramsValidation.data;
 
+    // Validate request body
+    const bodyValidation = await validateRequestBody(request, updateProjectSchema);
+    if (!bodyValidation.success) {
+      return bodyValidation.response;
+    }
+    const { title, description } = bodyValidation.data;
+
+    // Update the project
     await db.playground.update({
       where: { id, userId: session.user.id },
       data: { title, description: description ?? null },
@@ -41,8 +52,9 @@ export async function PUT(
 
     revalidatePath("/dashboard");
     return Response.json({ success: true });
-  } catch (e) {
-    return Response.json({ error: "Failed to update" }, { status: 500 });
+  } catch (error) {
+    console.error("Failed to update project:", error);
+    return Response.json({ error: "Failed to update project" }, { status: 500 });
   }
 }
 
@@ -57,6 +69,7 @@ export async function DELETE(
   }
 
   try {
+    // Authenticate user
     const session = await auth.api.getSession({
       headers: request.headers as unknown as Headers,
     });
@@ -64,14 +77,23 @@ export async function DELETE(
       return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { id } = await params;
+    // Validate route params
+    const resolvedParams = await params;
+    const paramsValidation = validateParams(resolvedParams, idParamSchema);
+    if (!paramsValidation.success) {
+      return paramsValidation.response;
+    }
+    const { id } = paramsValidation.data;
+
+    // Delete the project
     await db.playground.delete({
       where: { id, userId: session.user.id },
     });
 
     revalidatePath("/dashboard");
     return Response.json({ success: true });
-  } catch (e) {
-    return Response.json({ error: "Failed to delete" }, { status: 500 });
+  } catch (error) {
+    console.error("Failed to delete project:", error);
+    return Response.json({ error: "Failed to delete project" }, { status: 500 });
   }
 }

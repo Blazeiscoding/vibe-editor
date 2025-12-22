@@ -1,6 +1,7 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
+import { rateLimit, rateLimitPresets } from "@/lib/rate-limit";
+import { idParamSchema, validateParams } from "@/lib/validations";
 import type { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import type { NextRequest } from "next/server";
@@ -9,7 +10,14 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Apply rate limiting (strict for mutations)
+  const rateLimitResult = rateLimit(request, rateLimitPresets.strict);
+  if (!rateLimitResult.allowed) {
+    return rateLimitResult.response;
+  }
+
   try {
+    // Authenticate user
     const session = await auth.api.getSession({
       headers: request.headers as unknown as Headers,
     });
@@ -17,15 +25,25 @@ export async function POST(
       return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { id } = await params;
+    // Validate route params
+    const resolvedParams = await params;
+    const paramsValidation = validateParams(resolvedParams, idParamSchema);
+    if (!paramsValidation.success) {
+      return paramsValidation.response;
+    }
+    const { id } = paramsValidation.data;
+
+    // Find the original project
     const original = await db.playground.findUnique({
       where: { id, userId: session.user.id },
       include: { templateFiles: true },
     });
+
     if (!original) {
-      return Response.json({ error: "Not found" }, { status: 404 });
+      return Response.json({ error: "Project not found" }, { status: 404 });
     }
 
+    // Create duplicate
     await db.playground.create({
       data: {
         title: `${original.title} (Copy)`,
@@ -42,7 +60,8 @@ export async function POST(
 
     revalidatePath("/dashboard");
     return Response.json({ success: true });
-  } catch (e) {
-    return Response.json({ error: "Failed to duplicate" }, { status: 500 });
+  } catch (error) {
+    console.error("Failed to duplicate project:", error);
+    return Response.json({ error: "Failed to duplicate project" }, { status: 500 });
   }
 }
