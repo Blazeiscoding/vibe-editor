@@ -14,3 +14,12 @@ export {
   useImportGitHubRepoMutation,
   type GitHubRepo,
 } from "./use-github";
+
+// Settings hooks
+export {
+  settingsKeys,
+  useSettingsQuery,
+  useUpdateSettingsMutation,
+  defaultSettings,
+  type UserSettings,
+} from "./use-settings";

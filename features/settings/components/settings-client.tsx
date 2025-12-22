@@ -1,41 +1,102 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import { toast } from "sonner";
-import { Settings, Keyboard, Bell, Palette, Save, ArrowLeft } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Settings,
+  Keyboard,
+  Bell,
+  Palette,
+  Save,
+  ArrowLeft,
+  Code,
+  Loader2,
+} from "lucide-react";
+import {
+  useSettingsQuery,
+  useUpdateSettingsMutation,
+  defaultSettings,
+  type UserSettings,
+} from "@/hooks/queries/use-settings";
+import { useState, useEffect } from "react";
 
 export function SettingsClient() {
   const router = useRouter();
-  const [editorFontSize, setEditorFontSize] = useState("14");
-  const [tabSize, setTabSize] = useState("2");
-  const [autoSave, setAutoSave] = useState(true);
-  const [notifications, setNotifications] = useState(true);
+
+  // TanStack Query hooks
+  const { data: settings, isLoading } = useSettingsQuery();
+  const updateMutation = useUpdateSettingsMutation();
+
+  // Local state for form (synced with server data)
+  const [formData, setFormData] = useState<UserSettings>(defaultSettings);
+  const [hasChanges, setHasChanges] = useState(false);
+
+  // Sync form with fetched settings
+  useEffect(() => {
+    if (settings) {
+      setFormData(settings);
+      setHasChanges(false);
+    }
+  }, [settings]);
+
+  // Update form field
+  const updateField = <K extends keyof UserSettings>(
+    key: K,
+    value: UserSettings[K]
+  ) => {
+    setFormData((prev) => ({ ...prev, [key]: value }));
+    setHasChanges(true);
+  };
 
   const handleSave = () => {
-    // TODO: Save to database/user preferences
-    toast.success("Settings saved successfully!");
+    updateMutation.mutate(formData, {
+      onSuccess: () => {
+        setHasChanges(false);
+      },
+    });
   };
 
   const handleBack = () => {
     router.back();
   };
 
+  if (isLoading) {
+    return (
+      <div className="container max-w-4xl mx-auto py-10 space-y-8">
+        <div className="space-y-4">
+          <Skeleton className="h-10 w-32" />
+          <Skeleton className="h-10 w-64" />
+          <Skeleton className="h-5 w-96" />
+        </div>
+        <Skeleton className="h-64 w-full" />
+        <Skeleton className="h-32 w-full" />
+        <Skeleton className="h-32 w-full" />
+      </div>
+    );
+  }
+
   return (
     <div className="container max-w-4xl mx-auto py-10 space-y-8">
       <div className="space-y-4">
-        <Button
-          variant="ghost"
-          onClick={handleBack}
-          className="mb-4"
-        >
+        <Button variant="ghost" onClick={handleBack} className="mb-4">
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back
         </Button>
@@ -64,7 +125,10 @@ export function SettingsClient() {
         <CardContent className="space-y-6">
           <div className="space-y-2">
             <Label htmlFor="font-size">Font Size</Label>
-            <Select value={editorFontSize} onValueChange={setEditorFontSize}>
+            <Select
+              value={formData.editorFontSize.toString()}
+              onValueChange={(v) => updateField("editorFontSize", parseInt(v))}
+            >
               <SelectTrigger id="font-size">
                 <SelectValue />
               </SelectTrigger>
@@ -80,7 +144,10 @@ export function SettingsClient() {
 
           <div className="space-y-2">
             <Label htmlFor="tab-size">Tab Size</Label>
-            <Select value={tabSize} onValueChange={setTabSize}>
+            <Select
+              value={formData.editorTabSize.toString()}
+              onValueChange={(v) => updateField("editorTabSize", parseInt(v))}
+            >
               <SelectTrigger id="tab-size">
                 <SelectValue />
               </SelectTrigger>
@@ -94,6 +161,59 @@ export function SettingsClient() {
             </Select>
           </div>
 
+          <div className="space-y-2">
+            <Label htmlFor="theme">Editor Theme</Label>
+            <Select
+              value={formData.editorTheme}
+              onValueChange={(v) => updateField("editorTheme", v)}
+            >
+              <SelectTrigger id="theme">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="vs-dark">Dark (VS Code)</SelectItem>
+                <SelectItem value="vs-light">Light (VS Code)</SelectItem>
+                <SelectItem value="hc-black">High Contrast Dark</SelectItem>
+                <SelectItem value="hc-light">High Contrast Light</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="word-wrap">Word Wrap</Label>
+            <Select
+              value={formData.wordWrap}
+              onValueChange={(v) =>
+                updateField("wordWrap", v as UserSettings["wordWrap"])
+              }
+            >
+              <SelectTrigger id="word-wrap">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="off">Off</SelectItem>
+                <SelectItem value="on">On</SelectItem>
+                <SelectItem value="wordWrapColumn">
+                  At Column (80 chars)
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label htmlFor="minimap">Show Minimap</Label>
+              <p className="text-sm text-muted-foreground">
+                Display a minimap of the code on the right side
+              </p>
+            </div>
+            <Switch
+              id="minimap"
+              checked={formData.minimap}
+              onCheckedChange={(v) => updateField("minimap", v)}
+            />
+          </div>
+
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <Label htmlFor="auto-save">Auto Save</Label>
@@ -103,8 +223,8 @@ export function SettingsClient() {
             </div>
             <Switch
               id="auto-save"
-              checked={autoSave}
-              onCheckedChange={setAutoSave}
+              checked={formData.autoSave}
+              onCheckedChange={(v) => updateField("autoSave", v)}
             />
           </div>
         </CardContent>
@@ -123,8 +243,12 @@ export function SettingsClient() {
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
-            Keyboard shortcut customization will be available in a future update.
-            Press <kbd className="px-2 py-1 text-xs font-semibold bg-muted rounded">?</kbd> to view all available shortcuts.
+            Keyboard shortcut customization will be available in a future
+            update. Press{" "}
+            <kbd className="px-2 py-1 text-xs font-semibold bg-muted rounded">
+              ?
+            </kbd>{" "}
+            to view all available shortcuts.
           </p>
         </CardContent>
       </Card>
@@ -150,8 +274,8 @@ export function SettingsClient() {
             </div>
             <Switch
               id="notifications"
-              checked={notifications}
-              onCheckedChange={setNotifications}
+              checked={formData.notifications}
+              onCheckedChange={(v) => updateField("notifications", v)}
             />
           </div>
         </CardContent>
@@ -159,13 +283,30 @@ export function SettingsClient() {
 
       <Separator />
 
-      <div className="flex justify-end">
-        <Button onClick={handleSave} size="lg">
-          <Save className="mr-2 h-4 w-4" />
-          Save Settings
+      <div className="flex justify-end gap-2">
+        {hasChanges && (
+          <p className="text-sm text-muted-foreground self-center mr-2">
+            You have unsaved changes
+          </p>
+        )}
+        <Button
+          onClick={handleSave}
+          size="lg"
+          disabled={updateMutation.isPending || !hasChanges}
+        >
+          {updateMutation.isPending ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Saving...
+            </>
+          ) : (
+            <>
+              <Save className="mr-2 h-4 w-4" />
+              Save Settings
+            </>
+          )}
         </Button>
       </div>
     </div>
   );
 }
-

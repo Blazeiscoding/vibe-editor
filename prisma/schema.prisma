@@ -20,18 +20,19 @@ enum UserRole {
 }
 
 model User {
-  id       String    @id @default(cuid()) @map("_id")
-  name     String?
-  email    String    @unique
+  id            String        @id @default(cuid()) @map("_id")
+  name          String?
+  email         String        @unique
   emailVerified Boolean?
-  image    String?
-  accounts Account[]
-  sessions Session[]
-  role     UserRole  @default(USER)
+  image         String?
+  accounts      Account[]
+  sessions      Session[]
+  role          UserRole      @default(USER)
+  settings      UserSettings?
 
   myPlayground StarMark[]
 
-  
+
 
   staredPlayground Playground[]
   createdAt        DateTime     @default(now())
@@ -39,6 +40,24 @@ model User {
 
   @@index([createdAt])
   @@map("user")
+}
+
+model UserSettings {
+  id             String   @id @default(cuid()) @map("_id")
+  userId         String   @unique
+  editorFontSize Int      @default(14)
+  editorTabSize  Int      @default(2)
+  editorTheme    String   @default("vs-dark")
+  autoSave       Boolean  @default(true)
+  notifications  Boolean  @default(true)
+  minimap        Boolean  @default(true)
+  wordWrap       String   @default("off")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_settings")
 }
 
 model Account {
