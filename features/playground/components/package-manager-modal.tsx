@@ -23,7 +23,7 @@ import {
   Download,
   ExternalLink,
 } from "lucide-react";
-import type { TemplateFolder } from "@/features/playground/types";
+import type { TemplateFolder, TemplateItem } from "@/features/playground/types";
 import type { WebContainer } from "@webcontainer/api";
 
 interface PackageManagerModalProps {
@@ -31,7 +31,10 @@ interface PackageManagerModalProps {
   onOpenChange: (open: boolean) => void;
   templateData: TemplateFolder | null;
   webContainerInstance: WebContainer | null;
-  onPackageInstalled?: () => void;
+  /** Called after a package is installed/uninstalled with the updated template data */
+  onPackageInstalled?: (updatedTemplateData: TemplateFolder) => void;
+  /** Callback to save updated template data to database */
+  saveTemplateData?: (data: TemplateFolder) => Promise<void>;
 }
 
 interface NpmPackage {
@@ -110,6 +113,7 @@ export function PackageManagerModal({
   templateData,
   webContainerInstance,
   onPackageInstalled,
+  saveTemplateData,
 }: PackageManagerModalProps) {
   const [tab, setTab] = useState<"search" | "installed">("search");
   const [searchQuery, setSearchQuery] = useState("");
@@ -146,6 +150,59 @@ export function PackageManagerModal({
   // Get installed packages
   const installedPackages = getInstalledPackages(templateData);
 
+  // Helper to update package.json in templateData and return the updated data
+  const syncPackageJson = async (): Promise<TemplateFolder | null> => {
+    if (!webContainerInstance || !templateData) {
+      return null;
+    }
+
+    try {
+      // Read the updated package.json from WebContainer
+      const packageJsonContent = await webContainerInstance.fs.readFile(
+        "/package.json",
+        "utf-8"
+      );
+
+      // Update the package.json in templateData
+      const updatePackageJson = (
+        items: TemplateItem[]
+      ): TemplateItem[] => {
+        return items.map((item) => {
+          if ("folderName" in item) {
+            return {
+              ...item,
+              items: updatePackageJson(item.items),
+            };
+          } else if (
+            item.filename === "package" &&
+            item.fileExtension === "json"
+          ) {
+            return {
+              ...item,
+              content: packageJsonContent,
+            };
+          }
+          return item;
+        });
+      };
+
+      const updatedTemplateData: TemplateFolder = {
+        ...templateData,
+        items: updatePackageJson(templateData.items),
+      };
+
+      // Save to database if callback provided
+      if (saveTemplateData) {
+        await saveTemplateData(updatedTemplateData);
+      }
+
+      return updatedTemplateData;
+    } catch (error) {
+      console.error("Failed to sync package.json:", error);
+      return null;
+    }
+  };
+
   // Install package via WebContainer
   const handleInstall = async (packageName: string, isDev = false) => {
     if (!webContainerInstance) {
@@ -165,8 +222,13 @@ export function PackageManagerModal({
       const exitCode = await process.exit;
 
       if (exitCode === 0) {
+        // Sync the updated package.json to templateData and DB
+        const updatedData = await syncPackageJson();
         toast.success(`Installed ${packageName}`);
-        onPackageInstalled?.();
+        // Notify parent with updated data for file explorer sync
+        if (updatedData) {
+          onPackageInstalled?.(updatedData);
+        }
       } else {
         toast.error(`Failed to install ${packageName}`);
       }
@@ -195,8 +257,13 @@ export function PackageManagerModal({
       const exitCode = await process.exit;
 
       if (exitCode === 0) {
+        // Sync the updated package.json to templateData and DB
+        const updatedData = await syncPackageJson();
         toast.success(`Uninstalled ${packageName}`);
-        onPackageInstalled?.();
+        // Notify parent with updated data for file explorer sync
+        if (updatedData) {
+          onPackageInstalled?.(updatedData);
+        }
       } else {
         toast.error(`Failed to uninstall ${packageName}`);
       }

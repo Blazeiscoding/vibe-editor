@@ -18,6 +18,9 @@ import {
   X,
   Settings,
   Home,
+  Package,
+  Github,
+  Rocket,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -53,6 +56,9 @@ import { TemplateFile, TemplateFolder } from "@/features/playground/types";
 import { findFilePath } from "@/features/playground/libs";
 import { ConfirmationDialog } from "@/features/playground/components/dialogs/conformation-dialog";
 import { LoadingStep } from "@/features/playground/components/loadingStep";
+import { PackageManagerModal } from "@/features/playground/components/package-manager-modal";
+import { ExportGithubModal } from "@/features/playground/components/export-github-modal";
+import { DeployModal } from "@/features/playground/components/deploy-modal";
 
 const MainPlaygroundPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -67,6 +73,9 @@ const MainPlaygroundPage: React.FC = () => {
   });
 
   const [isPreviewVisible, setIsPreviewVisible] = useState(true);
+  const [isPackageManagerOpen, setIsPackageManagerOpen] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [isDeployModalOpen, setIsDeployModalOpen] = useState(false);
 
   // Custom hooks
   const { playgroundData, templateData, isLoading, error, saveTemplateData } =
@@ -427,6 +436,47 @@ const MainPlaygroundPage: React.FC = () => {
                   <TooltipContent>Save All (Ctrl+Shift+S)</TooltipContent>
                 </Tooltip>
 
+                <Separator orientation="vertical" className="h-6" />
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setIsPackageManagerOpen(true)}
+                    >
+                      <Package className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Package Manager</TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setIsExportModalOpen(true)}
+                    >
+                      <Github className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Export to GitHub</TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setIsDeployModalOpen(true)}
+                    >
+                      <Rocket className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Deploy to Vercel</TooltipContent>
+                </Tooltip>
+
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button size="sm" variant="outline">
@@ -572,6 +622,35 @@ const MainPlaygroundPage: React.FC = () => {
           setIsOpen={(open) =>
             setConfirmationDialog((prev) => ({ ...prev, isOpen: open }))
           }
+        />
+
+        {/* Package Manager Modal */}
+        <PackageManagerModal
+          open={isPackageManagerOpen}
+          onOpenChange={setIsPackageManagerOpen}
+          templateData={templateData}
+          webContainerInstance={instance}
+          saveTemplateData={saveTemplateData}
+          onPackageInstalled={(updatedData) => {
+            // Sync the file explorer with the updated template data
+            setTemplateData(updatedData);
+          }}
+        />
+
+        {/* Export to GitHub Modal */}
+        <ExportGithubModal
+          open={isExportModalOpen}
+          onOpenChange={setIsExportModalOpen}
+          playgroundId={id}
+          playgroundTitle={playgroundData?.title || ""}
+        />
+
+        {/* Deploy to Vercel Modal */}
+        <DeployModal
+          open={isDeployModalOpen}
+          onOpenChange={setIsDeployModalOpen}
+          playgroundId={id}
+          playgroundTitle={playgroundData?.title || ""}
         />
       </>
     </TooltipProvider>
