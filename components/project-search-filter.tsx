@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -68,8 +68,8 @@ export function ProjectSearchFilter({
     return filtered;
   }, [projects, searchQuery, templateFilter, sortBy]);
 
-  // Notify parent of filtered results
-  useMemo(() => {
+  // Notify parent of filtered results (use useEffect, not useMemo)
+  useEffect(() => {
     onFilteredProjectsChange(filteredAndSorted);
   }, [filteredAndSorted, onFilteredProjectsChange]);
 

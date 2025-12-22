@@ -29,7 +29,7 @@ export const useAISuggestions = (): UseAISuggestionsReturn => {
     isLoading: false,
     position: null,
     decoration: [],
-    isEnabled: true,
+    isEnabled: false, // Disabled - AI suggestions feature not implemented
   });
 
   const toggleEnabled = useCallback(() => {
