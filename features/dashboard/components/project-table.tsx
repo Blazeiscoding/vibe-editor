@@ -44,7 +44,6 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import Link from "next/link";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import {
   MoreHorizontal,
   Edit3,
@@ -56,9 +55,11 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { MarkedToggleButton } from "./toggle-star";
-import { loggers } from "@/lib/logger";
-
-const log = loggers.dashboard;
+import {
+  useUpdateProjectMutation,
+  useDeleteProjectMutation,
+  useDuplicateProjectMutation,
+} from "@/hooks/queries/use-projects";
 
 interface ProjectTableProps {
   projects: Project[];
@@ -70,7 +71,6 @@ interface EditProjectData {
 }
 
 export default function ProjectTable({ projects }: ProjectTableProps) {
-  const router = useRouter();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
@@ -78,7 +78,17 @@ export default function ProjectTable({ projects }: ProjectTableProps) {
     title: "",
     description: "",
   });
-  const [isLoading, setIsLoading] = useState(false);
+
+  // TanStack Query mutations
+  const updateMutation = useUpdateProjectMutation();
+  const deleteMutation = useDeleteProjectMutation();
+  const duplicateMutation = useDuplicateProjectMutation();
+
+  // Combined loading state from all mutations
+  const isLoading =
+    updateMutation.isPending ||
+    deleteMutation.isPending ||
+    duplicateMutation.isPending;
 
   const handleEditClick = (project: Project) => {
     setSelectedProject(project);
@@ -89,95 +99,44 @@ export default function ProjectTable({ projects }: ProjectTableProps) {
     setEditDialogOpen(true);
   };
 
-  const handleDeleteClick = async (project: Project) => {
+  const handleDeleteClick = (project: Project) => {
     setSelectedProject(project);
     setDeleteDialogOpen(true);
   };
 
-  const handleUpdateProject = async () => {
+  const handleUpdateProject = () => {
     if (!selectedProject) return;
 
-    setIsLoading(true);
-    try {
-      const res = await fetch(`/api/dashboard/projects/${selectedProject.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(editData),
-      });
-      if (!res.ok) throw new Error("Failed to update");
-      setEditDialogOpen(false);
-      setSelectedProject(null);
-      toast.success("Project updated successfully");
-      router.refresh(); // Refresh server component data
-    } catch (error) {
-      toast.error("Failed to update project");
-      log.error("Error updating project", { error });
-    } finally {
-      setIsLoading(false);
-    }
+    updateMutation.mutate(
+      {
+        id: selectedProject.id,
+        data: editData,
+      },
+      {
+        onSuccess: () => {
+          setEditDialogOpen(false);
+          setSelectedProject(null);
+        },
+      }
+    );
   };
 
-  const handleMarkasFavorite = async (project: Project) => {
-    setIsLoading(true);
-    try {
-      const res = await fetch("/api/dashboard/star", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          playgroundId: project.id,
-          isMarked: !project.Starmark[0]?.isMarked,
-        }),
-      });
-      if (!res.ok) throw new Error("Failed to toggle favorite");
-      toast.success("Project favorite toggled");
-      router.refresh(); // Refresh server component data
-    } catch (error) {
-      toast.error("Failed to mark project as favorite");
-      log.error("Error marking project as favorite", { error });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleDeleteProject = async () => {
+  const handleDeleteProject = () => {
     if (!selectedProject) return;
 
-    setIsLoading(true);
-    try {
-      const res = await fetch(`/api/dashboard/projects/${selectedProject.id}`, {
-        method: "DELETE",
-      });
-      if (!res.ok) throw new Error("Failed to delete");
-      setDeleteDialogOpen(false);
-      setSelectedProject(null);
-      toast.success("Project deleted successfully");
-      router.refresh(); // Refresh server component data
-    } catch (error) {
-      toast.error("Failed to delete project");
-      log.error("Error deleting project", { error });
-    } finally {
-      setIsLoading(false);
-    }
+    deleteMutation.mutate(
+      { id: selectedProject.id },
+      {
+        onSuccess: () => {
+          setDeleteDialogOpen(false);
+          setSelectedProject(null);
+        },
+      }
+    );
   };
 
-  const handleDuplicateProject = async (project: Project) => {
-    setIsLoading(true);
-    try {
-      const res = await fetch(
-        `/api/dashboard/projects/${project.id}/duplicate`,
-        {
-          method: "POST",
-        }
-      );
-      if (!res.ok) throw new Error("Failed to duplicate");
-      toast.success("Project duplicated successfully");
-      router.refresh(); // Refresh server component data
-    } catch (error) {
-      toast.error("Failed to duplicate project");
-      log.error("Error duplicating project", { error });
-    } finally {
-      setIsLoading(false);
-    }
+  const handleDuplicateProject = (project: Project) => {
+    duplicateMutation.mutate({ id: project.id });
   };
 
   const copyProjectUrl = (projectId: string) => {
@@ -277,12 +236,14 @@ export default function ProjectTable({ projects }: ProjectTableProps) {
                       <DropdownMenuSeparator />
                       <DropdownMenuItem
                         onClick={() => handleEditClick(project)}
+                        disabled={isLoading}
                       >
                         <Edit3 className="h-4 w-4 mr-2" />
                         Edit Project
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => handleDuplicateProject(project)}
+                        disabled={isLoading}
                       >
                         <Copy className="h-4 w-4 mr-2" />
                         Duplicate
@@ -297,6 +258,7 @@ export default function ProjectTable({ projects }: ProjectTableProps) {
                       <DropdownMenuItem
                         onClick={() => handleDeleteClick(project)}
                         className="text-destructive focus:text-destructive"
+                        disabled={isLoading}
                       >
                         <Trash2 className="h-4 w-4 mr-2" />
                         Delete Project
@@ -353,16 +315,16 @@ export default function ProjectTable({ projects }: ProjectTableProps) {
               type="button"
               variant="outline"
               onClick={() => setEditDialogOpen(false)}
-              disabled={isLoading}
+              disabled={updateMutation.isPending}
             >
               Cancel
             </Button>
             <Button
               type="button"
               onClick={handleUpdateProject}
-              disabled={isLoading || !editData.title.trim()}
+              disabled={updateMutation.isPending || !editData.title.trim()}
             >
-              {isLoading ? "Saving..." : "Save Changes"}
+              {updateMutation.isPending ? "Saving..." : "Save Changes"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -380,13 +342,15 @@ export default function ProjectTable({ projects }: ProjectTableProps) {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isLoading}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={deleteMutation.isPending}>
+              Cancel
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteProject}
-              disabled={isLoading}
+              disabled={deleteMutation.isPending}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {isLoading ? "Deleting..." : "Delete Project"}
+              {deleteMutation.isPending ? "Deleting..." : "Delete Project"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

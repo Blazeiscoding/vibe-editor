@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -10,21 +10,16 @@ import {
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
-import { useRouter } from "next/navigation";
 import { connectGithub } from "@/features/dashboard/actions/connect-github";
+import {
+  useGitHubReposQuery,
+  useImportGitHubRepoMutation,
+} from "@/hooks/queries/use-github";
+import { Loader2 } from "lucide-react";
 
 interface ImportGithubModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-}
-
-interface RepoItem {
-  id: number;
-  name: string;
-  full_name: string;
-  private: boolean;
-  description?: string | null;
 }
 
 export function ImportGithubModal({
@@ -32,90 +27,45 @@ export function ImportGithubModal({
   onOpenChange,
 }: ImportGithubModalProps) {
   const [tab, setTab] = useState("pick");
-  const [repos, setRepos] = useState<RepoItem[] | null>(null);
-  const [loading, setLoading] = useState(false);
   const [url, setUrl] = useState("");
   const [needsGitHubConnect, setNeedsGitHubConnect] = useState(false);
-  const router = useRouter();
 
-  useEffect(() => {
-    if (open && tab === "pick" && repos === null) {
-      setLoading(true);
-      fetch("/api/github/repos")
-        .then(async (r) => {
-          if (r.status === 400) {
-            setNeedsGitHubConnect(true);
-            return null;
-          }
-          if (!r.ok) throw new Error(await r.text());
-          return r.json();
-        })
-        .then((d) => {
-          if (d) setRepos(d.repos as RepoItem[]);
-        })
-        .catch(() => toast.error("Failed to load repositories"))
-        .finally(() => setLoading(false));
-    }
-  }, [open, tab, repos]);
+  // TanStack Query hooks
+  const {
+    data: reposData,
+    isLoading: isLoadingRepos,
+    error: reposError,
+  } = useGitHubReposQuery(open && tab === "pick");
+
+  const importMutation = useImportGitHubRepoMutation({
+    onSuccess: () => {
+      onOpenChange(false);
+    },
+    onGitHubNotLinked: () => {
+      setNeedsGitHubConnect(true);
+    },
+  });
+
+  // Check if GitHub is not linked
+  const isGitHubNotLinked =
+    needsGitHubConnect || reposError?.message === "GITHUB_NOT_LINKED";
+
+  const repos = reposData?.repos ?? [];
 
   const sortedRepos = useMemo(() => {
-    return (repos || [])
-      .slice()
-      .sort((a, b) => a.full_name.localeCompare(b.full_name));
+    return repos.slice().sort((a, b) => a.full_name.localeCompare(b.full_name));
   }, [repos]);
 
-  const importRepo = async (identifier: string) => {
-    try {
-      setLoading(true);
-      const res = await fetch("/api/github/import", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ full_name: identifier }),
-      });
-      const data = await res.json();
-      if (res.status === 400) {
-        setNeedsGitHubConnect(true);
-        throw new Error(data?.error || "GitHub not linked");
-      }
-      if (!res.ok) throw new Error(data?.error || "Import failed");
-      toast.success("Repository imported");
-      onOpenChange(false);
-      router.push(`/playground/${data.playgroundId}`);
-    } catch (e) {
-      const error = e instanceof Error ? e : new Error("Import failed");
-      toast.error(error.message);
-    } finally {
-      setLoading(false);
-    }
+  const importRepo = (identifier: string) => {
+    importMutation.mutate({ full_name: identifier });
   };
 
-  const handleUrlImport = async () => {
+  const handleUrlImport = () => {
     if (!url.trim()) return;
-    try {
-      setLoading(true);
-      const res = await fetch("/api/github/import", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ repoUrl: url.trim() }),
-      });
-      const data = await res.json();
-      if (res.status === 400) {
-        setNeedsGitHubConnect(true);
-        throw new Error(data?.error || "GitHub not linked");
-      }
-      if (!res.ok) throw new Error(data?.error || "Import failed");
-      toast.success("Repository imported");
-      onOpenChange(false);
-      router.push(`/playground/${data.playgroundId}`);
-    } catch (e) {
-      const error = e instanceof Error ? e : new Error("Import failed");
-      toast.error(error.message);
-    } finally {
-      setLoading(false);
-    }
+    importMutation.mutate({ repoUrl: url.trim() });
   };
 
-  // server action imported above
+  const isLoading = isLoadingRepos || importMutation.isPending;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -132,7 +82,7 @@ export function ImportGithubModal({
             <TabsTrigger value="url">By URL</TabsTrigger>
           </TabsList>
           <TabsContent value="pick" className="mt-4">
-            {needsGitHubConnect && (
+            {isGitHubNotLinked && (
               <div className="mb-4 border rounded-md p-3">
                 <p className="text-sm mb-2">
                   Connect your GitHub account to list your repositories.
@@ -144,22 +94,25 @@ export function ImportGithubModal({
                 </form>
               </div>
             )}
-            {loading && (
-              <div className="text-sm text-muted-foreground">Loading...</div>
+            {isLoadingRepos && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Loading repositories...
+              </div>
             )}
-            {!loading && repos && repos.length === 0 && (
+            {!isLoadingRepos && repos.length === 0 && !isGitHubNotLinked && (
               <div className="text-sm text-muted-foreground">
                 No repositories found.
               </div>
             )}
-            {!loading && repos && repos.length > 0 && (
+            {!isLoadingRepos && repos.length > 0 && (
               <div className="max-h-80 overflow-auto border rounded-md">
                 {sortedRepos.map((r) => (
                   <button
                     key={r.id}
-                    className="w-full text-left px-3 py-2 hover:bg-muted flex items-center justify-between"
+                    className="w-full text-left px-3 py-2 hover:bg-muted flex items-center justify-between disabled:opacity-50 disabled:cursor-not-allowed"
                     onClick={() => importRepo(r.full_name)}
-                    disabled={loading}
+                    disabled={isLoading}
                   >
                     <div className="flex flex-col">
                       <span className="font-medium">{r.full_name}</span>
@@ -180,7 +133,7 @@ export function ImportGithubModal({
             )}
           </TabsContent>
           <TabsContent value="url" className="mt-4">
-            {needsGitHubConnect && (
+            {isGitHubNotLinked && (
               <div className="mb-4 border rounded-md p-3">
                 <p className="text-sm mb-2">
                   Connect your GitHub account to import by URL.
@@ -197,13 +150,20 @@ export function ImportGithubModal({
                 placeholder="https://github.com/owner/repo or owner/repo"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
-                disabled={loading}
+                disabled={isLoading}
               />
               <Button
                 onClick={handleUrlImport}
-                disabled={loading || !url.trim()}
+                disabled={isLoading || !url.trim()}
               >
-                Import
+                {importMutation.isPending ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Importing...
+                  </>
+                ) : (
+                  "Import"
+                )}
               </Button>
             </div>
           </TabsContent>
