@@ -385,7 +385,7 @@ const MainPlaygroundPage: React.FC = () => {
             <div className="flex flex-1 items-center gap-2">
               <div className="flex flex-col flex-1">
                 <h1 className="text-sm font-medium">
-                  {playgroundData?.name || "Code Playground"}
+                  {playgroundData?.title || "Code Playground"}
                 </h1>
                 <p className="text-xs text-muted-foreground">
                   {openFiles.length} file(s) open

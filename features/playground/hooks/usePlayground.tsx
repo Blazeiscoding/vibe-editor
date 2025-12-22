@@ -4,13 +4,17 @@ import {
   getPlaygroundById,
   SaveUpdatedCode,
 } from "@/features/playground/actions";
-import type { TemplateFolder, PlaygroundData } from "@/features/playground/types";
+import type {
+  TemplateFolder,
+  PlaygroundByIdResult,
+} from "@/features/playground/types";
+import { parseTemplateContent } from "@/features/playground/types";
 import { loggers } from "@/lib/logger";
 
 const log = loggers.dashboard;
 
 interface UsePlaygroundReturn {
-  playgroundData: PlaygroundData | null;
+  playgroundData: PlaygroundByIdResult | null;
   templateData: TemplateFolder | null;
   isLoading: boolean;
   error: string | null;
@@ -19,9 +23,8 @@ interface UsePlaygroundReturn {
 }
 
 export const usePlayground = (id: string): UsePlaygroundReturn => {
-  const [playgroundData, setPlaygroundData] = useState<PlaygroundData | null>(
-    null
-  );
+  const [playgroundData, setPlaygroundData] =
+    useState<PlaygroundByIdResult | null>(null);
   const [templateData, setTemplateData] = useState<TemplateFolder | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -35,16 +38,24 @@ export const usePlayground = (id: string): UsePlaygroundReturn => {
 
       const data = await getPlaygroundById(id);
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      setPlaygroundData((data as any) ?? null);
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const rawContent = (data as any)?.templateFiles?.[0]?.content;
-      if (typeof rawContent === "string") {
-        const parsedContent = JSON.parse(rawContent);
-        setTemplateData(parsedContent);
-        toast.success("Playground loaded successfully");
+      if (!data) {
+        setError("Playground not found");
         return;
+      }
+
+      setPlaygroundData(data as PlaygroundByIdResult);
+
+      // Check if we have saved template content
+      const rawContent = data.templateFiles?.[0]?.content;
+      if (rawContent) {
+        const parsedContent = parseTemplateContent(
+          rawContent as TemplateFolder | string
+        );
+        if (parsedContent) {
+          setTemplateData(parsedContent);
+          toast.success("Playground loaded successfully");
+          return;
+        }
       }
 
       // Load template from API if not in saved content
@@ -67,8 +78,8 @@ export const usePlayground = (id: string): UsePlaygroundReturn => {
       }
 
       toast.success("Template loaded successfully");
-    } catch (error) {
-      log.error("Error loading playground", { error });
+    } catch (err) {
+      log.error("Error loading playground", { error: err });
       setError("Failed to load playground data");
       toast.error("Failed to load playground data");
     } finally {
@@ -82,10 +93,10 @@ export const usePlayground = (id: string): UsePlaygroundReturn => {
         await SaveUpdatedCode(id, data);
         setTemplateData(data);
         toast.success("Changes saved successfully");
-      } catch (error) {
-        log.error("Error saving template data", { error });
+      } catch (err) {
+        log.error("Error saving template data", { error: err });
         toast.error("Failed to save changes");
-        throw error;
+        throw err;
       }
     },
     [id]
