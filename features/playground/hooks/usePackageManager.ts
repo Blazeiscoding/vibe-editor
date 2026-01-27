@@ -3,14 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { WebContainer } from "@webcontainer/api";
 import { TemplateFolder, TemplateItem } from "../types";
-
-export interface NpmPackage {
-  name: string;
-  version: string;
-  description: string;
-  downloads: number;
-  publisher?: string;
-}
+import { searchNpmPackages, NpmPackage } from "@/lib/api/npm";
 
 export interface InstalledPackage {
   name: string;
@@ -92,11 +85,8 @@ export function usePackageManager({
     queryKey: ["npm-search", debouncedQuery],
     queryFn: async () => {
       if (!debouncedQuery) return { packages: [] };
-      const res = await fetch(
-        `/api/npm/search?q=${encodeURIComponent(debouncedQuery)}&limit=15`
-      );
-      if (!res.ok) throw new Error("Search failed");
-      return res.json();
+      const packages = await searchNpmPackages(debouncedQuery);
+      return { packages };
     },
     enabled: debouncedQuery.length > 0,
     staleTime: 5 * 60 * 1000,

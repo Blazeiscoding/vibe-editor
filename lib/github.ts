@@ -3,6 +3,17 @@ import {
   TemplateFolder,
   TemplateItem,
 } from "@/features/playground/libs/path-to-json";
+import {
+  fetchGitHub,
+  createGitHubRepository,
+  createGitHubBlob,
+  createGitHubTree,
+  createGitHubCommit,
+  updateGitHubRef,
+  createGitHubRef,
+  getBranchSha,
+  getTreeSha,
+} from "@/lib/api/github";
 
 export async function getGitHubToken(userId: string): Promise<string | null> {
   const account = await db.account.findFirst({
@@ -11,23 +22,7 @@ export async function getGitHubToken(userId: string): Promise<string | null> {
   return account?.accessToken || null;
 }
 
-interface GitHubFetchOptions extends RequestInit {
-  token: string;
-}
-
-export async function fetchGitHub(url: string, { token, ...options }: GitHubFetchOptions) {
-  const res = await fetch(url, {
-    ...options,
-    headers: {
-      Authorization: `Bearer ${token}`,
-      Accept: "application/vnd.github+json",
-      ...options.headers,
-    },
-    cache: options.cache || "no-store",
-  });
-  
-  return res;
-}
+export { fetchGitHub }; // Re-export for compatibility if needed
 
 export function parseRepo(input: string): { owner: string; repo: string } | null {
   try {
@@ -136,45 +131,7 @@ export async function fetchDirectoryTree(
 // GitHub Export Functions
 // ============================================
 
-interface CreateRepoOptions {
-  name: string;
-  description?: string;
-  isPrivate?: boolean;
-}
-
-interface CreateRepoResult {
-  id: number;
-  full_name: string;
-  html_url: string;
-  default_branch: string;
-}
-
-/**
- * Create a new GitHub repository
- */
-export async function createRepository(
-  token: string,
-  options: CreateRepoOptions
-): Promise<CreateRepoResult> {
-  const res = await fetchGitHub("https://api.github.com/user/repos", {
-    token,
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      name: options.name,
-      description: options.description || "",
-      private: options.isPrivate || false,
-      auto_init: false,
-    }),
-  });
-
-  if (!res.ok) {
-    const error = await res.json().catch(() => ({}));
-    throw new Error(error.message || "Failed to create repository");
-  }
-
-  return res.json();
-}
+export { createGitHubRepository as createRepository };
 
 interface FileToCommit {
   path: string;
@@ -226,30 +183,11 @@ export async function pushFilesToRepo(
   commitMessage: string
 ): Promise<{ sha: string; url: string }> {
   // Step 1: Get the current commit SHA for the branch (if exists)
-  let baseSha: string | null = null;
+  const baseSha = await getBranchSha(token, owner, repo, branch);
   let baseTreeSha: string | null = null;
 
-  try {
-    const refRes = await fetchGitHub(
-      `https://api.github.com/repos/${owner}/${repo}/git/ref/heads/${branch}`,
-      { token }
-    );
-    if (refRes.ok) {
-      const refData = await refRes.json();
-      baseSha = refData.object.sha;
-
-      // Get the tree SHA
-      const commitRes = await fetchGitHub(
-        `https://api.github.com/repos/${owner}/${repo}/git/commits/${baseSha}`,
-        { token }
-      );
-      if (commitRes.ok) {
-        const commitData = await commitRes.json();
-        baseTreeSha = commitData.tree.sha;
-      }
-    }
-  } catch {
-    // Branch doesn't exist yet, that's fine
+  if (baseSha) {
+    baseTreeSha = await getTreeSha(token, owner, repo, baseSha);
   }
 
   // Step 2: Create blobs for each file
@@ -261,115 +199,35 @@ export async function pushFilesToRepo(
   }> = [];
 
   for (const file of files) {
-    const blobRes = await fetchGitHub(
-      `https://api.github.com/repos/${owner}/${repo}/git/blobs`,
-      {
-        token,
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          content: Buffer.from(file.content).toString("base64"),
-          encoding: "base64",
-        }),
-      }
-    );
-
-    if (!blobRes.ok) {
-      throw new Error(`Failed to create blob for ${file.path}`);
-    }
-
-    const blobData = await blobRes.json();
+    const blobSha = await createGitHubBlob(token, owner, repo, file.content);
     treeItems.push({
       path: file.path,
       mode: "100644",
       type: "blob",
-      sha: blobData.sha,
+      sha: blobSha,
     });
   }
 
   // Step 3: Create a tree
-  const treeRes = await fetchGitHub(
-    `https://api.github.com/repos/${owner}/${repo}/git/trees`,
-    {
-      token,
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        base_tree: baseTreeSha,
-        tree: treeItems,
-      }),
-    }
-  );
-
-  if (!treeRes.ok) {
-    throw new Error("Failed to create tree");
-  }
-
-  const treeData = await treeRes.json();
+  const treeSha = await createGitHubTree(token, owner, repo, baseTreeSha, treeItems);
 
   // Step 4: Create a commit
-  const commitBody: {
-    message: string;
-    tree: string;
-    parents?: string[];
-  } = {
-    message: commitMessage,
-    tree: treeData.sha,
-  };
-
-  if (baseSha) {
-    commitBody.parents = [baseSha];
-  }
-
-  const commitRes = await fetchGitHub(
-    `https://api.github.com/repos/${owner}/${repo}/git/commits`,
-    {
-      token,
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(commitBody),
-    }
+  const commitData = await createGitHubCommit(
+    token,
+    owner,
+    repo,
+    commitMessage,
+    treeSha,
+    baseSha
   );
 
-  if (!commitRes.ok) {
-    throw new Error("Failed to create commit");
-  }
-
-  const commitData = await commitRes.json();
-
   // Step 5: Update or create the branch reference
-  const refUrl = `https://api.github.com/repos/${owner}/${repo}/git/refs/heads/${branch}`;
-
   if (baseSha) {
     // Update existing branch
-    const updateRes = await fetchGitHub(refUrl, {
-      token,
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ sha: commitData.sha }),
-    });
-
-    if (!updateRes.ok) {
-      throw new Error("Failed to update branch");
-    }
+    await updateGitHubRef(token, owner, repo, branch, commitData.sha);
   } else {
     // Create new branch
-    const createRes = await fetchGitHub(
-      `https://api.github.com/repos/${owner}/${repo}/git/refs`,
-      {
-        token,
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ref: `refs/heads/${branch}`,
-          sha: commitData.sha,
-        }),
-      }
-    );
-
-    if (!createRes.ok) {
-      throw new Error("Failed to create branch");
-    }
+    await createGitHubRef(token, owner, repo, branch, commitData.sha);
   }
 
   return {
