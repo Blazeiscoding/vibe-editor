@@ -10,6 +10,7 @@ import { TemplateFileTree } from "@/features/playground/components/playground-ex
 
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
+import dynamic from "next/dynamic";
 import {
   FileText,
   FolderOpen,
@@ -56,9 +57,34 @@ import { TemplateFile, TemplateFolder } from "@/features/playground/types";
 import { findFilePath } from "@/features/playground/libs";
 import { ConfirmationDialog } from "@/features/playground/components/dialogs/conformation-dialog";
 import { LoadingStep } from "@/features/playground/components/loadingStep";
-import { PackageManagerModal } from "@/features/playground/components/package-manager-modal";
-import { ExportGithubModal } from "@/features/playground/components/export-github-modal";
-import { DeployModal } from "@/features/playground/components/deploy-modal";
+// Lazy load modals since they aren't needed on initial render
+const PackageManagerModal = dynamic(
+  () =>
+    import("@/features/playground/components/package-manager-modal").then(
+      (mod) => mod.PackageManagerModal
+    ),
+  {
+    loading: () => null,
+  }
+);
+const ExportGithubModal = dynamic(
+  () =>
+    import("@/features/playground/components/export-github-modal").then(
+      (mod) => mod.ExportGithubModal
+    ),
+  {
+    loading: () => null,
+  }
+);
+const DeployModal = dynamic(
+  () =>
+    import("@/features/playground/components/deploy-modal").then(
+      (mod) => mod.DeployModal
+    ),
+  {
+    loading: () => null,
+  }
+);
 
 const MainPlaygroundPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -99,6 +125,7 @@ const MainPlaygroundPage: React.FC = () => {
     setActiveFileId,
     setPlaygroundId,
     setOpenFiles,
+    setSaveTemplateData,
   } = useFileExplorer();
 
   const {
@@ -125,6 +152,13 @@ const MainPlaygroundPage: React.FC = () => {
     }
   }, [templateData, setTemplateData, openFiles.length]);
 
+  // Sync saveTemplateData to store
+  React.useEffect(() => {
+    if (saveTemplateData) {
+      setSaveTemplateData(saveTemplateData);
+    }
+  }, [saveTemplateData, setSaveTemplateData]);
+
   // Create wrapper functions that pass saveTemplateData
   const wrappedHandleAddFile = useCallback(
     (newFile: TemplateFile, parentPath: string) => {
@@ -132,32 +166,31 @@ const MainPlaygroundPage: React.FC = () => {
         newFile,
         parentPath,
         writeFileSync!,
-        instance,
-        saveTemplateData
+        instance
       );
     },
-    [handleAddFile, writeFileSync, instance, saveTemplateData]
+    [handleAddFile, writeFileSync, instance]
   );
 
   const wrappedHandleAddFolder = useCallback(
     (newFolder: TemplateFolder, parentPath: string) => {
-      return handleAddFolder(newFolder, parentPath, instance, saveTemplateData);
+      return handleAddFolder(newFolder, parentPath, instance);
     },
-    [handleAddFolder, instance, saveTemplateData]
+    [handleAddFolder, instance]
   );
 
   const wrappedHandleDeleteFile = useCallback(
     (file: TemplateFile, parentPath: string) => {
-      return handleDeleteFile(file, parentPath, saveTemplateData);
+      return handleDeleteFile(file, parentPath);
     },
-    [handleDeleteFile, saveTemplateData]
+    [handleDeleteFile]
   );
 
   const wrappedHandleDeleteFolder = useCallback(
     (folder: TemplateFolder, parentPath: string) => {
-      return handleDeleteFolder(folder, parentPath, saveTemplateData);
+      return handleDeleteFolder(folder, parentPath);
     },
-    [handleDeleteFolder, saveTemplateData]
+    [handleDeleteFolder]
   );
 
   const wrappedHandleRenameFile = useCallback(
@@ -171,11 +204,10 @@ const MainPlaygroundPage: React.FC = () => {
         file,
         newFilename,
         newExtension,
-        parentPath,
-        saveTemplateData
+        parentPath
       );
     },
-    [handleRenameFile, saveTemplateData]
+    [handleRenameFile]
   );
 
   const wrappedHandleRenameFolder = useCallback(
@@ -183,11 +215,10 @@ const MainPlaygroundPage: React.FC = () => {
       return handleRenameFolder(
         folder,
         newFolderName,
-        parentPath,
-        saveTemplateData
+        parentPath
       );
     },
-    [handleRenameFolder, saveTemplateData]
+    [handleRenameFolder]
   );
 
   const activeFile = openFiles.find((file) => file.id === activeFileId);

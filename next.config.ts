@@ -36,21 +36,8 @@ const nextConfig: NextConfig = {
         ],
       },
       {
-        // Apply strict security headers to playground routes
-        source: "/playground",
-        headers: [
-          {
-            key: "Cross-Origin-Opener-Policy",
-            value: "same-origin",
-          },
-          {
-            key: "Cross-Origin-Embedder-Policy",
-            value: "require-corp",
-          },
-        ],
-      },
-      {
-        source: "/playground/:path*",
+        // Apply strict security headers to all routes to ensure SharedArrayBuffer works
+        source: "/(.*)",
         headers: [
           {
             key: "Cross-Origin-Opener-Policy",

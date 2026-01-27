@@ -1,7 +1,5 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
 import {
   Dialog,
   DialogContent,
@@ -13,7 +11,6 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { toast } from "sonner";
 import {
   Package,
   Search,
@@ -21,10 +18,10 @@ import {
   Plus,
   Trash2,
   Download,
-  ExternalLink,
 } from "lucide-react";
-import type { TemplateFolder, TemplateItem } from "@/features/playground/types";
+import type { TemplateFolder } from "@/features/playground/types";
 import type { WebContainer } from "@webcontainer/api";
+import { usePackageManager } from "../hooks/usePackageManager";
 
 interface PackageManagerModalProps {
   open: boolean;
@@ -37,74 +34,11 @@ interface PackageManagerModalProps {
   saveTemplateData?: (data: TemplateFolder) => Promise<void>;
 }
 
-interface NpmPackage {
-  name: string;
-  version: string;
-  description: string;
-  downloads: number;
-  publisher?: string;
-}
-
-interface InstalledPackage {
-  name: string;
-  version: string;
-  isDev: boolean;
-}
-
 // Helper to format download numbers
 function formatDownloads(num: number): string {
   if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
   if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
   return num.toString();
-}
-
-// Helper to get installed packages from template data
-function getInstalledPackages(
-  templateData: TemplateFolder | null
-): InstalledPackage[] {
-  if (!templateData) return [];
-
-  // Find package.json file
-  const findPackageJson = (
-    items: TemplateFolder["items"]
-  ): string | null => {
-    for (const item of items) {
-      if ("folderName" in item) {
-        const found = findPackageJson(item.items);
-        if (found) return found;
-      } else if (
-        item.filename === "package" &&
-        item.fileExtension === "json"
-      ) {
-        return item.content;
-      }
-    }
-    return null;
-  };
-
-  const packageJsonContent = findPackageJson(templateData.items);
-  if (!packageJsonContent) return [];
-
-  try {
-    const parsed = JSON.parse(packageJsonContent);
-    const packages: InstalledPackage[] = [];
-
-    if (parsed.dependencies) {
-      Object.entries(parsed.dependencies).forEach(([name, version]) => {
-        packages.push({ name, version: version as string, isDev: false });
-      });
-    }
-
-    if (parsed.devDependencies) {
-      Object.entries(parsed.devDependencies).forEach(([name, version]) => {
-        packages.push({ name, version: version as string, isDev: true });
-      });
-    }
-
-    return packages;
-  } catch {
-    return [];
-  }
 }
 
 export function PackageManagerModal({
@@ -115,168 +49,22 @@ export function PackageManagerModal({
   onPackageInstalled,
   saveTemplateData,
 }: PackageManagerModalProps) {
-  const [tab, setTab] = useState<"search" | "installed">("search");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [debouncedQuery, setDebouncedQuery] = useState("");
-  const [installingPackage, setInstallingPackage] = useState<string | null>(
-    null
-  );
-
-  // Debounce search query using useEffect
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedQuery(searchQuery);
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [searchQuery]);
-
-  // Search query
-  const { data: searchResults, isLoading: isSearching } = useQuery<{
-    packages: NpmPackage[];
-  }>({
-    queryKey: ["npm-search", debouncedQuery],
-    queryFn: async () => {
-      if (!debouncedQuery) return { packages: [] };
-      const res = await fetch(
-        `/api/npm/search?q=${encodeURIComponent(debouncedQuery)}&limit=15`
-      );
-      if (!res.ok) throw new Error("Search failed");
-      return res.json();
-    },
-    enabled: debouncedQuery.length > 0,
-    staleTime: 5 * 60 * 1000,
+  const {
+    searchQuery,
+    setSearchQuery,
+    searchResults,
+    isSearching,
+    installedPackages,
+    installingPackage,
+    installPackage,
+    uninstallPackage,
+    isInstalled,
+  } = usePackageManager({
+    templateData,
+    webContainerInstance,
+    saveTemplateData,
+    onPackageInstalled,
   });
-
-  // Get installed packages
-  const installedPackages = getInstalledPackages(templateData);
-
-  // Helper to update package.json in templateData and return the updated data
-  const syncPackageJson = async (): Promise<TemplateFolder | null> => {
-    if (!webContainerInstance || !templateData) {
-      return null;
-    }
-
-    try {
-      // Read the updated package.json from WebContainer
-      const packageJsonContent = await webContainerInstance.fs.readFile(
-        "/package.json",
-        "utf-8"
-      );
-
-      // Update the package.json in templateData
-      const updatePackageJson = (
-        items: TemplateItem[]
-      ): TemplateItem[] => {
-        return items.map((item) => {
-          if ("folderName" in item) {
-            return {
-              ...item,
-              items: updatePackageJson(item.items),
-            };
-          } else if (
-            item.filename === "package" &&
-            item.fileExtension === "json"
-          ) {
-            return {
-              ...item,
-              content: packageJsonContent,
-            };
-          }
-          return item;
-        });
-      };
-
-      const updatedTemplateData: TemplateFolder = {
-        ...templateData,
-        items: updatePackageJson(templateData.items),
-      };
-
-      // Save to database if callback provided
-      if (saveTemplateData) {
-        await saveTemplateData(updatedTemplateData);
-      }
-
-      return updatedTemplateData;
-    } catch (error) {
-      console.error("Failed to sync package.json:", error);
-      return null;
-    }
-  };
-
-  // Install package via WebContainer
-  const handleInstall = async (packageName: string, isDev = false) => {
-    if (!webContainerInstance) {
-      toast.error("WebContainer not ready. Please wait and try again.");
-      return;
-    }
-
-    setInstallingPackage(packageName);
-
-    try {
-      const args = ["install", packageName];
-      if (isDev) args.push("--save-dev");
-
-      const process = await webContainerInstance.spawn("npm", args);
-
-      // Wait for the process to finish
-      const exitCode = await process.exit;
-
-      if (exitCode === 0) {
-        // Sync the updated package.json to templateData and DB
-        const updatedData = await syncPackageJson();
-        toast.success(`Installed ${packageName}`);
-        // Notify parent with updated data for file explorer sync
-        if (updatedData) {
-          onPackageInstalled?.(updatedData);
-        }
-      } else {
-        toast.error(`Failed to install ${packageName}`);
-      }
-    } catch (error) {
-      console.error("Install error:", error);
-      toast.error(`Failed to install ${packageName}`);
-    } finally {
-      setInstallingPackage(null);
-    }
-  };
-
-  // Uninstall package via WebContainer
-  const handleUninstall = async (packageName: string) => {
-    if (!webContainerInstance) {
-      toast.error("WebContainer not ready");
-      return;
-    }
-
-    setInstallingPackage(packageName);
-
-    try {
-      const process = await webContainerInstance.spawn("npm", [
-        "uninstall",
-        packageName,
-      ]);
-      const exitCode = await process.exit;
-
-      if (exitCode === 0) {
-        // Sync the updated package.json to templateData and DB
-        const updatedData = await syncPackageJson();
-        toast.success(`Uninstalled ${packageName}`);
-        // Notify parent with updated data for file explorer sync
-        if (updatedData) {
-          onPackageInstalled?.(updatedData);
-        }
-      } else {
-        toast.error(`Failed to uninstall ${packageName}`);
-      }
-    } catch (error) {
-      console.error("Uninstall error:", error);
-      toast.error(`Failed to uninstall ${packageName}`);
-    } finally {
-      setInstallingPackage(null);
-    }
-  };
-
-  const isInstalled = (packageName: string) =>
-    installedPackages.some((p) => p.name === packageName);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -291,10 +79,7 @@ export function PackageManagerModal({
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs
-          value={tab}
-          onValueChange={(v) => setTab(v as "search" | "installed")}
-        >
+        <Tabs defaultValue="search">
           <TabsList className="grid grid-cols-2 w-full">
             <TabsTrigger value="search">
               <Search className="mr-2 h-4 w-4" />
@@ -324,11 +109,13 @@ export function PackageManagerModal({
                 </div>
               )}
 
-              {!isSearching && searchResults?.packages.length === 0 && searchQuery && (
-                <p className="text-center text-muted-foreground py-8">
-                  No packages found
-                </p>
-              )}
+              {!isSearching &&
+                searchResults?.packages.length === 0 &&
+                searchQuery && (
+                  <p className="text-center text-muted-foreground py-8">
+                    No packages found
+                  </p>
+                )}
 
               {!isSearching && !searchQuery && (
                 <p className="text-center text-muted-foreground py-8">
@@ -372,7 +159,7 @@ export function PackageManagerModal({
                     <Button
                       size="sm"
                       variant={isInstalled(pkg.name) ? "outline" : "default"}
-                      onClick={() => handleInstall(pkg.name)}
+                      onClick={() => installPackage(pkg.name)}
                       disabled={installingPackage !== null}
                     >
                       {installingPackage === pkg.name ? (
@@ -429,7 +216,7 @@ export function PackageManagerModal({
                       size="sm"
                       variant="ghost"
                       className="text-destructive hover:text-destructive"
-                      onClick={() => handleUninstall(pkg.name)}
+                      onClick={() => uninstallPackage(pkg.name)}
                       disabled={installingPackage !== null}
                     >
                       {installingPackage === pkg.name ? (
@@ -448,3 +235,4 @@ export function PackageManagerModal({
     </Dialog>
   );
 }
+

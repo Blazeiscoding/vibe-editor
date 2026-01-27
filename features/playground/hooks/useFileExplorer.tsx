@@ -2,7 +2,6 @@ import { create } from "zustand";
 
 import { toast } from "sonner";
 import { TemplateFile, TemplateFolder, OpenFile } from "../types";
-import { SaveUpdatedCode } from "../actions";
 import { generateFileId } from "../libs";
 import { loggers } from "@/lib/logger";
 
@@ -14,6 +13,7 @@ interface FileExplorerState {
   openFiles: OpenFile[];
   activeFileId: string | null;
   editorContent: string;
+  saveTemplateData: ((data: TemplateFolder) => Promise<void>) | null;
 
   // Actions
   setPlaygroundId: (id: string) => void;
@@ -21,6 +21,7 @@ interface FileExplorerState {
   setEditorContent: (content: string) => void;
   setOpenFiles: (files: OpenFile[]) => void;
   setActiveFileId: (fileId: string | null) => void;
+  setSaveTemplateData: (fn: (data: TemplateFolder) => Promise<void>) => void;
   openFile: (file: TemplateFile) => void;
   closeFile: (fileId: string) => void;
   closeAllFiles: () => void;
@@ -29,38 +30,32 @@ interface FileExplorerState {
     parentPath: string,
     writeFileSync: (filePath: string, content: string) => Promise<void>,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    instance: any,
-    saveTemplateData: (data: TemplateFolder) => Promise<void>
+    instance: any
   ) => Promise<void>;
   handleAddFolder: (
     newFolder: TemplateFolder, 
     parentPath: string, 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    instance: any, 
-    saveTemplateData: (data: TemplateFolder) => Promise<void>
+    instance: any
   ) => Promise<void>;
   handleDeleteFile: (
     file: TemplateFile, 
-    parentPath: string, 
-    saveTemplateData: (data: TemplateFolder) => Promise<void>
+    parentPath: string
   ) => Promise<void>;
   handleDeleteFolder: (
     folder: TemplateFolder,
-    parentPath: string,
-    saveTemplateData: (data: TemplateFolder) => Promise<void>
+    parentPath: string
   ) => Promise<void>;
   handleRenameFile: (
     file: TemplateFile,
     newFilename: string,
     newExtension: string,
-    parentPath: string,
-    saveTemplateData: (data: TemplateFolder) => Promise<void>
+    parentPath: string
   ) => Promise<void>;
   handleRenameFolder: (
     folder: TemplateFolder,
     newFolderName: string,
-    parentPath: string,
-    saveTemplateData: (data: TemplateFolder) => Promise<void>
+    parentPath: string
   ) => Promise<void>;
   updateFileContent: (fileId: string, content: string) => void;
 }
@@ -72,6 +67,7 @@ export const useFileExplorer = create<FileExplorerState>((set, get) => ({
   openFiles: [] satisfies OpenFile[],
   activeFileId: null,
   editorContent: "",
+  saveTemplateData: null,
 
   setTemplateData: (data) => set({ templateData: data }),
   setPlaygroundId(id) {
@@ -80,6 +76,7 @@ export const useFileExplorer = create<FileExplorerState>((set, get) => ({
   setEditorContent: (content) => set({ editorContent: content }),
   setOpenFiles: (files) => set({ openFiles: files }),
   setActiveFileId: (fileId) => set({ activeFileId: fileId }),
+  setSaveTemplateData: (fn) => set({ saveTemplateData: fn }),
 
   openFile: (file) => {
     const fileId = generateFileId(file, get().templateData!);
@@ -142,9 +139,9 @@ export const useFileExplorer = create<FileExplorerState>((set, get) => ({
     });
   },
 
-  handleAddFile: async (newFile, parentPath, writeFileSync, instance, saveTemplateData) => {
-    const { templateData } = get();
-    if (!templateData) return;
+  handleAddFile: async (newFile, parentPath, writeFileSync, instance) => {
+    const { templateData, saveTemplateData } = get();
+    if (!templateData || !saveTemplateData) return;
 
     try {
       const updatedTemplateData = JSON.parse(JSON.stringify(templateData)) as TemplateFolder;
@@ -164,7 +161,6 @@ export const useFileExplorer = create<FileExplorerState>((set, get) => ({
       set({ templateData: updatedTemplateData });
       toast.success(`Created file: ${newFile.filename}.${newFile.fileExtension}`);
 
-      // Use the passed saveTemplateData function
       await saveTemplateData(updatedTemplateData);
 
       // Sync with web container
@@ -182,9 +178,9 @@ export const useFileExplorer = create<FileExplorerState>((set, get) => ({
     }
   },
 
-  handleAddFolder: async (newFolder, parentPath, instance, saveTemplateData) => {
-    const { templateData } = get();
-    if (!templateData) return;
+  handleAddFolder: async (newFolder, parentPath, instance) => {
+    const { templateData, saveTemplateData } = get();
+    if (!templateData || !saveTemplateData) return;
 
     try {
       const updatedTemplateData = JSON.parse(JSON.stringify(templateData)) as TemplateFolder;
@@ -204,7 +200,6 @@ export const useFileExplorer = create<FileExplorerState>((set, get) => ({
       set({ templateData: updatedTemplateData });
       toast.success(`Created folder: ${newFolder.folderName}`);
 
-      // Use the passed saveTemplateData function
       await saveTemplateData(updatedTemplateData);
 
       // Sync with web container
@@ -220,9 +215,9 @@ export const useFileExplorer = create<FileExplorerState>((set, get) => ({
     }
   },
 
-  handleDeleteFile: async (file, parentPath, saveTemplateData) => {
-    const { templateData, openFiles } = get();
-    if (!templateData) return;
+  handleDeleteFile: async (file, parentPath) => {
+    const { templateData, openFiles, saveTemplateData } = get();
+    if (!templateData || !saveTemplateData) return;
 
     try {
       const updatedTemplateData = JSON.parse(
@@ -259,7 +254,6 @@ export const useFileExplorer = create<FileExplorerState>((set, get) => ({
 
       set({ templateData: updatedTemplateData });
 
-      // Use the passed saveTemplateData function
       await saveTemplateData(updatedTemplateData);
       toast.success(`Deleted file: ${file.filename}.${file.fileExtension}`);
     } catch (error) {
@@ -268,9 +262,9 @@ export const useFileExplorer = create<FileExplorerState>((set, get) => ({
     }
   },
 
-  handleDeleteFolder: async (folder, parentPath, saveTemplateData) => {
-    const { templateData } = get();
-    if (!templateData) return;
+  handleDeleteFolder: async (folder, parentPath) => {
+    const { templateData, saveTemplateData } = get();
+    if (!templateData || !saveTemplateData) return;
 
     try {
       const updatedTemplateData = JSON.parse(
@@ -311,7 +305,6 @@ export const useFileExplorer = create<FileExplorerState>((set, get) => ({
 
       set({ templateData: updatedTemplateData });
 
-      // Use the passed saveTemplateData function
       await saveTemplateData(updatedTemplateData);
       toast.success(`Deleted folder: ${folder.folderName}`);
     } catch (error) {
@@ -324,11 +317,10 @@ export const useFileExplorer = create<FileExplorerState>((set, get) => ({
     file,
     newFilename,
     newExtension,
-    parentPath,
-    saveTemplateData
+    parentPath
   ) => {
-    const { templateData, openFiles, activeFileId } = get();
-    if (!templateData) return;
+    const { templateData, openFiles, activeFileId, saveTemplateData } = get();
+    if (!templateData || !saveTemplateData) return;
 
     // Generate old and new file IDs using the same logic as openFile
     const oldFileId = generateFileId(file, templateData);
@@ -384,7 +376,6 @@ export const useFileExplorer = create<FileExplorerState>((set, get) => ({
           activeFileId: activeFileId === oldFileId ? newFileId : activeFileId,
         });
 
-        // Use the passed saveTemplateData function
         await saveTemplateData(updatedTemplateData);
         toast.success(`Renamed file to: ${newFilename}.${newExtension}`);
       }
@@ -394,9 +385,9 @@ export const useFileExplorer = create<FileExplorerState>((set, get) => ({
     }
   },
 
-  handleRenameFolder: async (folder, newFolderName, parentPath, saveTemplateData) => {
-    const { templateData } = get();
-    if (!templateData) return;
+  handleRenameFolder: async (folder, newFolderName, parentPath) => {
+    const { templateData, saveTemplateData } = get();
+    if (!templateData || !saveTemplateData) return;
 
     try {
       const updatedTemplateData = JSON.parse(
@@ -427,7 +418,6 @@ export const useFileExplorer = create<FileExplorerState>((set, get) => ({
 
         set({ templateData: updatedTemplateData });
 
-        // Use the passed saveTemplateData function
         await saveTemplateData(updatedTemplateData);
         toast.success(`Renamed folder to: ${newFolderName}`);
       }
