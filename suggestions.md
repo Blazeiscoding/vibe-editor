@@ -71,7 +71,7 @@ Based on an analysis of the codebase, here are several recommendations to improv
 
 ## Summary of Immediate Next Steps
 
-1.  [ ] **Fix Types**: Replace `any` in `terminal.tsx` and `page.tsx` with proper types.
-2.  [ ] **Clean Dependencies**: Remove duplicate `xterm` and check `zod` version.
+1.  [x] **Fix Types**: Replace `any` in `page.tsx` with proper types. ✅ Done
+2.  [x] **Clean Dependencies**: Remove duplicate `xterm` ✅ Not an issue - only @xterm/* packages exist
 3.  [ ] **Refactor Modal**: Split `PackageManagerModal` into smaller components.
-4.  [ ] **Lazy Load**: Dynamically import large modals.
+4.  [x] **Lazy Load**: Dynamically import large modals. ✅ Already implemented

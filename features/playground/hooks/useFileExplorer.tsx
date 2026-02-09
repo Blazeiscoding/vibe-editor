@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import type { WebContainer } from "@webcontainer/api";
 
 import { toast } from "sonner";
 import { TemplateFile, TemplateFolder, OpenFile } from "../types";
@@ -29,14 +30,12 @@ interface FileExplorerState {
     newFile: TemplateFile,
     parentPath: string,
     writeFileSync: (filePath: string, content: string) => Promise<void>,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    instance: any
+    instance: WebContainer | null
   ) => Promise<void>;
   handleAddFolder: (
     newFolder: TemplateFolder, 
     parentPath: string, 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    instance: any
+    instance: WebContainer | null
   ) => Promise<void>;
   handleDeleteFile: (
     file: TemplateFile, 

@@ -143,7 +143,7 @@ export async function createGitHubTree(
   baseTreeSha: string | null,
   treeItems: Array<{ path: string; mode: string; type: string; sha: string }>
 ): Promise<string> {
-  const body: any = { tree: treeItems };
+  const body: { tree: typeof treeItems; base_tree?: string } = { tree: treeItems };
   if (baseTreeSha) body.base_tree = baseTreeSha;
 
   const res = await fetchGitHub(
@@ -175,7 +175,7 @@ export async function createGitHubCommit(
   treeSha: string,
   parentSha: string | null
 ): Promise<{ sha: string }> {
-  const body: any = {
+  const body: { message: string; tree: string; parents?: string[] } = {
     message,
     tree: treeSha,
   };

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
@@ -53,7 +52,7 @@ import { usePlayground } from "@/features/playground/hooks/usePlayground";
 import { useAISuggestions } from "@/features/playground/hooks/useAISuggestion";
 import { useWebContainer } from "@/features/webcontainers/hooks/useWebContainer";
 import { SaveUpdatedCode } from "@/features/playground/actions";
-import { TemplateFile, TemplateFolder } from "@/features/playground/types";
+import { TemplateFile, TemplateFolder, TemplateItem } from "@/features/playground/types";
 import { findFilePath } from "@/features/playground/libs";
 import { ConfirmationDialog } from "@/features/playground/components/dialogs/conformation-dialog";
 import { LoadingStep } from "@/features/playground/components/loadingStep";
@@ -252,7 +251,7 @@ const MainPlaygroundPage: React.FC = () => {
         const updatedTemplateData = JSON.parse(
           JSON.stringify(latestTemplateData)
         );
-        const updateFileContent = (items: any[]): any[] =>
+        const updateFileContent = (items: TemplateItem[]): TemplateItem[] =>
           items.map((item) => {
             if ("folderName" in item) {
               return { ...item, items: updateFileContent(item.items) };
