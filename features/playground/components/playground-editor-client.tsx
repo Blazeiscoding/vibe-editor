@@ -4,7 +4,10 @@ import { PlaygroundEditor } from "./playground-editor";
 import type {
   TemplateItem,
   TemplateFile,
+  TemplateFolder,
 } from "@/features/playground/types";
+import type { MonacoEditorInstance, MonacoNamespace } from "@/types/monaco";
+
 interface PlaygroundEditorClientProps {
   templateData: TemplateItem;
 }
@@ -12,17 +15,15 @@ interface PlaygroundEditorClientProps {
 const PlaygroundEditorClient: React.FC<PlaygroundEditorClientProps> = ({
   templateData,
 }) => {
-  const [activeFile, setActiveFile] = useState<TemplateFile | undefined>(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    "items" in (templateData as any) &&
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (templateData as any).items.length > 0 &&
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      "content" in (templateData as any).items[0]
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ? ((templateData as any).items[0] as TemplateFile)
-      : undefined
-  );
+  const [activeFile, setActiveFile] = useState<TemplateFile | undefined>(() => {
+    if ("items" in templateData) {
+      const folder = templateData as TemplateFolder;
+      if (folder.items.length > 0 && "content" in folder.items[0]) {
+        return folder.items[0] as TemplateFile;
+      }
+    }
+    return undefined;
+  });
   const [content, setContent] = useState(activeFile?.content || "");
   const [suggestion, setSuggestion] = useState<string | null>(null);
   const [suggestionLoading, setSuggestionLoading] = useState(false);
@@ -38,18 +39,15 @@ const PlaygroundEditorClient: React.FC<PlaygroundEditorClientProps> = ({
     }
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleAcceptSuggestion = (editor: any, monaco: any) => {
+  const handleAcceptSuggestion = (_editor: MonacoEditorInstance, _monaco: MonacoNamespace) => {
     setSuggestion(null);
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleRejectSuggestion = (editor: any) => {
+  const handleRejectSuggestion = (_editor: MonacoEditorInstance) => {
     setSuggestion(null);
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleTriggerSuggestion = (type: string, editor: any) => {
+  const handleTriggerSuggestion = (_type: string, _editor: MonacoEditorInstance) => {
     setSuggestionLoading(true);
     setTimeout(() => {
       setSuggestion("// Sample suggestion\n// Implement your logic here");

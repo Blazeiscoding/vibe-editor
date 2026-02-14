@@ -16,40 +16,10 @@ export type ICursorPositionChangedEvent = Monaco.editor.ICursorPositionChangedEv
 export type ISelection = Monaco.ISelection;
 
 /**
- * Monaco Editor instance - the editor object returned by monaco.editor.create()
- * This is a simplified interface covering common use cases
+ * Monaco Editor instance - uses the real IStandaloneCodeEditor type
+ * for full compatibility with the Monaco Editor API
  */
-export interface MonacoEditorInstance {
-  getValue: () => string;
-  setValue: (value: string) => void;
-  getModel: () => ITextModel | null;
-  getPosition: () => IPosition | null;
-  setPosition: (position: IPosition) => void;
-  getSelection: () => ISelection | null;
-  setSelection: (selection: ISelection | IRange) => void;
-  focus: () => void;
-  trigger: (source: string, handlerId: string, payload: unknown) => void;
-  executeEdits: (
-    source: string,
-    edits: Array<{ range: IRange; text: string; forceMoveMarkers?: boolean }>
-  ) => boolean;
-  onDidChangeCursorPosition: (
-    listener: (e: ICursorPositionChangedEvent) => void
-  ) => IDisposable;
-  onDidChangeModelContent: (
-    listener: (e: IModelContentChangedEvent) => void
-  ) => IDisposable;
-  onDidFocusEditorText: (listener: () => void) => IDisposable;
-  onDidBlurEditorText: (listener: () => void) => IDisposable;
-  addCommand: (
-    keybinding: number,
-    handler: () => void,
-    context?: string
-  ) => string | null;
-  updateOptions: (options: Monaco.editor.IEditorOptions) => void;
-  layout: (dimension?: { width: number; height: number }) => void;
-  dispose: () => void;
-}
+export type MonacoEditorInstance = Monaco.editor.IStandaloneCodeEditor;
 
 /**
  * Monaco namespace - the global monaco object

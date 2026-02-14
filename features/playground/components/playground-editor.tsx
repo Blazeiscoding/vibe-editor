@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import type * as Monaco from "monaco-editor";
 
 import {
   defaultEditorOptions,
@@ -8,6 +9,7 @@ import {
 } from "@/features/playground/libs/editor-config";
 import type { TemplateFile } from "@/features/playground/libs/path-to-json";
 import { useEditorSuggestions } from "@/features/playground/hooks/use-editor-suggestions";
+import type { MonacoEditorInstance, MonacoNamespace } from "@/types/monaco";
 
 import { EditorSkeleton } from "@/components/loading/editor-skeleton";
 
@@ -24,12 +26,9 @@ interface PlaygroundEditorProps {
   suggestion: string | null;
   suggestionLoading: boolean;
   suggestionPosition: { line: number; column: number } | null;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  onAcceptSuggestion: (editor: any, monaco: any) => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  onRejectSuggestion: (editor: any) => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  onTriggerSuggestion: (type: string, editor: any) => void;
+  onAcceptSuggestion: (editor: MonacoEditorInstance, monaco: MonacoNamespace) => void;
+  onRejectSuggestion: (editor: MonacoEditorInstance) => void;
+  onTriggerSuggestion: (type: string, editor: MonacoEditorInstance) => void;
 }
 
 export const PlaygroundEditor = ({
@@ -66,14 +65,14 @@ export const PlaygroundEditor = ({
       <MonacoEditor
         height="100%"
         value={content}
-        onChange={(value: any) => onContentChange(value || "")}
+        onChange={(value: string | undefined) => onContentChange(value || "")}
         onMount={handleEditorDidMount}
         language={
           activeFile
             ? getEditorLanguage(activeFile.fileExtension || "")
             : "plaintext"
         }
-        options={defaultEditorOptions as any}
+        options={defaultEditorOptions as Monaco.editor.IStandaloneEditorConstructionOptions}
       />
     </div>
   );

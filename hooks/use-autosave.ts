@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from "react"
 
-interface UseAutosaveOptions {
-  onSave: (data: any) => Promise<void> | void
+interface UseAutosaveOptions<T> {
+  onSave: (data: T) => Promise<void> | void
   delay?: number
   enabled?: boolean
 }
@@ -12,7 +12,7 @@ interface AutosaveStatus {
   error: Error | null
 }
 
-export function useAutosave({ onSave, delay = 2000, enabled = true }: UseAutosaveOptions) {
+export function useAutosave<T>({ onSave, delay = 2000, enabled = true }: UseAutosaveOptions<T>) {
   const [status, setStatus] = useState<AutosaveStatus>({
     isSaving: false,
     lastSaved: null,
@@ -20,7 +20,7 @@ export function useAutosave({ onSave, delay = 2000, enabled = true }: UseAutosav
   })
   
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
-  const dataRef = useRef<any>(null)
+  const dataRef = useRef<T | null>(null)
   const isSavingRef = useRef(false)
 
   const save = useCallback(async () => {
@@ -49,7 +49,7 @@ export function useAutosave({ onSave, delay = 2000, enabled = true }: UseAutosav
     }
   }, [onSave])
 
-  const trigger = useCallback((data: any) => {
+  const trigger = useCallback((data: T) => {
     if (!enabled) return
 
     dataRef.current = data

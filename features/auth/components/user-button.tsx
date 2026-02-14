@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-non-null-asserted-optional-chain */
+
 "use client";
 import React from "react";
 import {
@@ -24,7 +24,7 @@ const UserButton = () => {
       <DropdownMenuTrigger>
         <div className={cn("relative rounded-full")}>
           <Avatar>
-            <AvatarImage src={user?.image!} alt={user?.name!} />
+            <AvatarImage src={user?.image ?? ""} alt={user?.name ?? "User"} />
             <AvatarFallback className="bg-red-500">
               <User className="text-white" />
             </AvatarFallback>

@@ -69,8 +69,7 @@ export function PlaygroundLayout() {
   return (
     <div className="h-screen flex flex-col">
       <PlaygroundHeader />
-      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-      <PlaygroundEditorClient templateData={templateData as any} />
+      <PlaygroundEditorClient templateData={templateData} />
     </div>
   );
 }

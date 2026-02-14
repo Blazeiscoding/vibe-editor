@@ -3,6 +3,9 @@
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { headers } from "next/headers";
+import { createLogger } from "@/lib/logger";
+
+const logger = createLogger("Auth");
 
 export const getUserById = async (id: string) => {
   try {
@@ -12,7 +15,7 @@ export const getUserById = async (id: string) => {
     });
     return user;
   } catch (error) {
-    console.log(error);
+    logger.error("Failed to get user by ID", { id, error });
     return null;
   }
 };
@@ -26,7 +29,7 @@ export const getAccountByUserId = async (userId: string) => {
     });
     return account;
   } catch (error) {
-    console.log(error);
+    logger.error("Failed to get account by user ID", { userId, error });
     return null;
   }
 };

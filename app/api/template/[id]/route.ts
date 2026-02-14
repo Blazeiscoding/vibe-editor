@@ -8,6 +8,9 @@ import { idParamSchema, validateParams } from "@/lib/validations";
 import path from "path";
 import fs from "fs/promises";
 import { NextRequest } from "next/server";
+import { createLogger } from "@/lib/logger";
+
+const logger = createLogger("Template");
 
 // Helper function to ensure valid JSON
 function validateJsonStructure(data: unknown): boolean {
@@ -15,7 +18,7 @@ function validateJsonStructure(data: unknown): boolean {
     JSON.parse(JSON.stringify(data)); // Ensures it's serializable
     return true;
   } catch (error) {
-    console.error("Invalid JSON structure:", error);
+    logger.error("Invalid JSON structure", { error });
     return false;
   }
 }
@@ -54,8 +57,7 @@ export async function GET(
     const inputPath = path.join(process.cwd(), templatePath);
     const outputFile = path.join(process.cwd(), `output/${templateKey}.json`);
 
-    console.log("Input Path:", inputPath);
-    console.log("Output Path:", outputFile);
+    logger.debug("Generating template structure", { inputPath, outputFile });
 
     // Save and read the template structure
     await saveTemplateStructureToJson(inputPath, outputFile);
@@ -77,7 +79,7 @@ export async function GET(
       { status: 200 }
     );
   } catch (error) {
-    console.error("Error generating template JSON:", error);
+    logger.error("Error generating template JSON", { error });
     return Response.json(
       { error: "Failed to generate template" },
       { status: 500 }

@@ -15,8 +15,8 @@ export const publicRoutes: string[] = [];
 export const protectedRoutes: string[] = ["/"];
 
 /**
- * An Array of routes that are accessible to the public
- * Routes that start with this (/api/auth) prefix do not require authentication
+ * An Array of routes used for authentication
+ * These routes handle sign-in, sign-up, and related auth flows
  * @type {string[]}
  */
 
@@ -25,8 +25,8 @@ export const authRoutes: string[] = [
 ];
 
 /**
- * An Array of routes that are accessible to the public
- * Routes that start with this (/api/auth) prefix do not require authentication
+ * The prefix for authentication API routes
+ * Routes that start with this prefix are handled by the auth provider
  * @type {string}
  */
 

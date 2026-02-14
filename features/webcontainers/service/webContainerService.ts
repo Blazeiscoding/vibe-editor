@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { WebContainer } from '@webcontainer/api';
+import { WebContainer, WebContainerProcess } from '@webcontainer/api';
 
 // Singleton class to manage WebContainer instance
 class WebContainerService {
@@ -56,7 +55,7 @@ class WebContainerService {
     return this.mountPromise;
   }
 
-  public async spawn(command: string, args: string[] = []): Promise<any> {
+  public async spawn(command: string, args: string[] = []): Promise<WebContainerProcess> {
     const instance = await this.getWebContainer();
     return instance.spawn(command, args);
   }

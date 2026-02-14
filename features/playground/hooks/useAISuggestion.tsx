@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { loggers } from "@/lib/logger";
+import type { MonacoEditorInstance, MonacoNamespace } from "@/types/monaco";
 
 const log = loggers.suggestions;
 
@@ -13,14 +14,10 @@ interface AISuggestionsState {
 
 interface UseAISuggestionsReturn extends AISuggestionsState {
   toggleEnabled: () => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  fetchSuggestion: (type: string, editor: any) => Promise<void>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  acceptSuggestion: (editor: any, monaco: any) => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  rejectSuggestion: (editor: any) => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  clearSuggestion: (editor: any) => void;
+  fetchSuggestion: (type: string, editor: MonacoEditorInstance) => Promise<void>;
+  acceptSuggestion: (editor: MonacoEditorInstance, monaco: MonacoNamespace) => void;
+  rejectSuggestion: (editor: MonacoEditorInstance) => void;
+  clearSuggestion: (editor: MonacoEditorInstance) => void;
 }
 
 export const useAISuggestions = (): UseAISuggestionsReturn => {
@@ -37,8 +34,7 @@ export const useAISuggestions = (): UseAISuggestionsReturn => {
     setState((prev) => ({ ...prev, isEnabled: !prev.isEnabled }));
   }, []);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const fetchSuggestion = useCallback(async (type: string, editor: any) => {
+  const fetchSuggestion = useCallback(async (type: string, editor: MonacoEditorInstance) => {
     log.debug("Fetching AI suggestion", { isEnabled: state.isEnabled, hasEditor: !!editor });
 
     // Use functional state update to get fresh state
@@ -114,8 +110,7 @@ export const useAISuggestions = (): UseAISuggestionsReturn => {
   }, []); // Remove state.isEnabled from dependencies to prevent stale closures
 
   const acceptSuggestion = useCallback(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (editor: any, monaco: any) => {
+    (editor: MonacoEditorInstance, monaco: MonacoNamespace) => {
       setState((currentState) => {
         if (!currentState.suggestion || !currentState.position || !editor || !monaco) {
           return currentState;
@@ -148,8 +143,7 @@ export const useAISuggestions = (): UseAISuggestionsReturn => {
     []
   );
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const rejectSuggestion = useCallback((editor: any) => {
+  const rejectSuggestion = useCallback((editor: MonacoEditorInstance) => {
     setState((currentState) => {
       if (editor && currentState.decoration.length > 0) {
         editor.deltaDecorations(currentState.decoration, []);
@@ -163,8 +157,7 @@ export const useAISuggestions = (): UseAISuggestionsReturn => {
     });
   }, []);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const clearSuggestion = useCallback((editor: any) => {
+  const clearSuggestion = useCallback((editor: MonacoEditorInstance) => {
     setState((currentState) => {
       if (editor && currentState.decoration.length > 0) {
         editor.deltaDecorations(currentState.decoration, []);

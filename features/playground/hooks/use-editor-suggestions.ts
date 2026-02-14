@@ -1,18 +1,26 @@
 import { useRef, useCallback, useEffect, useState } from "react";
 import type { TemplateFile } from "@/features/playground/libs/path-to-json";
 import { getEditorLanguage, configureMonaco, defaultEditorOptions } from "@/features/playground/libs/editor-config";
+import type {
+  MonacoEditorInstance,
+  MonacoNamespace,
+  ITextModel,
+  IPosition,
+  InlineCompletionContext,
+  InlineCompletionList,
+  IDisposable,
+  ICursorPositionChangedEvent,
+  IModelContentChangedEvent,
+} from "@/types/monaco";
 
 interface UseEditorSuggestionsProps {
   activeFile: TemplateFile | undefined;
   suggestion: string | null;
   suggestionLoading: boolean;
   suggestionPosition: { line: number; column: number } | null;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  onAcceptSuggestion: (editor: any, monaco: any) => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  onRejectSuggestion: (editor: any) => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  onTriggerSuggestion: (type: string, editor: any) => void;
+  onAcceptSuggestion: (editor: MonacoEditorInstance, monaco: MonacoNamespace) => void;
+  onRejectSuggestion: (editor: MonacoEditorInstance) => void;
+  onTriggerSuggestion: (type: string, editor: MonacoEditorInstance) => void;
 }
 
 export const useEditorSuggestions = ({
@@ -24,12 +32,9 @@ export const useEditorSuggestions = ({
   onRejectSuggestion,
   onTriggerSuggestion,
 }: UseEditorSuggestionsProps) => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const editorRef = useRef<any>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const monacoRef = useRef<any>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const inlineCompletionProviderRef = useRef<any>(null);
+  const editorRef = useRef<MonacoEditorInstance | null>(null);
+  const monacoRef = useRef<MonacoNamespace | null>(null);
+  const inlineCompletionProviderRef = useRef<IDisposable | null>(null);
   
   const currentSuggestionRef = useRef<{
     text: string;
@@ -43,8 +48,7 @@ export const useEditorSuggestions = ({
   const isAcceptingSuggestionRef = useRef(false);
   const suggestionAcceptedRef = useRef(false);
   const suggestionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const tabCommandRef = useRef<any>(null);
+  const tabCommandRef = useRef<string | null>(null);
 
   const updateCurrentSuggestion = (val: typeof currentSuggestionRef.current) => {
     currentSuggestionRef.current = val;
@@ -57,15 +61,14 @@ export const useEditorSuggestions = ({
 
   // Create inline completion provider
   const createInlineCompletionProvider = useCallback(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (monaco: any) => {
+    (monaco: MonacoNamespace) => {
       return {
         provideInlineCompletions: async (
-          model: any,
-          position: any,
-          context: any,
-          token: any
-        ) => {
+          model: ITextModel,
+          position: IPosition,
+          context: InlineCompletionContext,
+          token: { isCancellationRequested: boolean }
+        ): Promise<InlineCompletionList> => {
           // Don't provide completions if we're currently accepting or have already accepted
           if (
             isAcceptingSuggestionRef.current ||
@@ -124,7 +127,10 @@ export const useEditorSuggestions = ({
             ],
           };
         },
-        freeInlineCompletions: (completions: any) => {
+        freeInlineCompletions: (_completions: InlineCompletionList) => {
+           // Cleanup if needed
+        },
+        disposeInlineCompletions: (_completions: InlineCompletionList) => {
            // Cleanup if needed
         },
       };
@@ -174,6 +180,7 @@ export const useEditorSuggestions = ({
 
       // Verify we're still at the suggestion position
       if (
+        !currentPosition ||
         currentPosition.lineNumber !== suggestionPos.line ||
         currentPosition.column < suggestionPos.column ||
         currentPosition.column > suggestionPos.column + 5
@@ -241,6 +248,8 @@ export const useEditorSuggestions = ({
 
     const position = editorRef.current.getPosition();
     const suggestion = currentSuggestionRef.current;
+
+    if (!position) return false;
 
     return (
       position.lineNumber === suggestion.position.line &&
@@ -337,8 +346,7 @@ export const useEditorSuggestions = ({
   }, []);
 
   // The main init function for the editor
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleEditorDidMount = useCallback((editor: any, monaco: any) => {
+  const handleEditorDidMount = useCallback((editor: MonacoEditorInstance, monaco: MonacoNamespace) => {
     editorRef.current = editor;
     monacoRef.current = monaco;
 
@@ -416,7 +424,7 @@ export const useEditorSuggestions = ({
     });
 
     // Listen for cursor position changes to hide suggestions when moving away
-    editor.onDidChangeCursorPosition((e: any) => {
+    editor.onDidChangeCursorPosition((e: ICursorPositionChangedEvent) => {
       if (isAcceptingSuggestionRef.current) return;
 
       const newPosition = e.position;
@@ -451,7 +459,7 @@ export const useEditorSuggestions = ({
     });
 
     // Listen for content changes to detect manual typing over suggestions
-    editor.onDidChangeModelContent((e: any) => {
+    editor.onDidChangeModelContent((e: IModelContentChangedEvent) => {
       if (isAcceptingSuggestionRef.current) return;
 
       // If user types while there's a suggestion, clear it (unless it's our insertion)

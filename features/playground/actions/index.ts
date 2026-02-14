@@ -1,6 +1,4 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-non-null-asserted-optional-chain */
+
 "use server";
 import { currentUser } from "@/features/auth/actions";
 import { db } from "@/lib/db";
@@ -25,7 +23,7 @@ export const toggleStarMarked = async (
     if (isChecked) {
       await db.starMark.create({
         data: {
-          userId: userId!,
+          userId: userId,
           playgroundId,
           isMarked: isChecked,
         },
