@@ -72,7 +72,26 @@ export const env = {
 
   get baseUrl() {
     const e = getEnv();
-    return e.BETTER_AUTH_URL || e.NEXTAUTH_URL || "http://localhost:3000";
+    if (e.BETTER_AUTH_URL) {
+      return e.BETTER_AUTH_URL;
+    }
+
+    if (e.NEXTAUTH_URL) {
+      return e.NEXTAUTH_URL;
+    }
+
+    if (e.NODE_ENV !== "production") {
+      return "http://localhost:3000";
+    }
+
+    const vercelUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL || process.env.VERCEL_URL;
+    if (vercelUrl) {
+      return vercelUrl.startsWith("http") ? vercelUrl : `https://${vercelUrl}`;
+    }
+
+    throw new Error(
+      "BETTER_AUTH_URL or NEXTAUTH_URL must be set in production."
+    );
   },
 
   get githubId() {

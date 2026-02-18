@@ -1,5 +1,13 @@
 import type { NextConfig } from "next";
 
+const configuredCorsOrigin =
+  process.env.CORS_ORIGIN ||
+  process.env.BETTER_AUTH_URL ||
+  process.env.NEXTAUTH_URL ||
+  process.env.NEXT_PUBLIC_BETTER_AUTH_URL ||
+  process.env.NEXT_PUBLIC_NEXTAUTH_URL ||
+  (process.env.NODE_ENV === "development" ? "http://localhost:3000" : "");
+
 const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
@@ -30,7 +38,9 @@ const nextConfig: NextConfig = {
         source: "/api/:path*",
         headers: [
           { key: "Access-Control-Allow-Credentials", value: "true" },
-          { key: "Access-Control-Allow-Origin", value: "http://localhost:3000" }, // specific origin for credentials
+          ...(configuredCorsOrigin
+            ? [{ key: "Access-Control-Allow-Origin", value: configuredCorsOrigin }]
+            : []),
           { key: "Access-Control-Allow-Methods", value: "GET,DELETE,PATCH,POST,PUT" },
           { key: "Access-Control-Allow-Headers", value: "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version" },
         ],
