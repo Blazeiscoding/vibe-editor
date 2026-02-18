@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useCallback, useSyncExternalStore } from "react";
 import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
 import { SearchAddon } from "@xterm/addon-search";
@@ -89,9 +89,14 @@ export function useTerminal({ containerRef, theme, webContainerInstance }: UseTe
   const terminalRef = useRef<Terminal | null>(null);
   const fitAddonRef = useRef<FitAddon | null>(null);
   const searchAddonRef = useRef<SearchAddon | null>(null);
-  
-  const [isConnected, setIsConnected] = useState(false);
-  const [isClient, setIsClient] = useState(false);
+  const hasShownConnectedMessage = useRef(false);
+
+  const isClient = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
+  const isConnected = Boolean(webContainerInstance);
 
   // Command history management
   const commandHistory = useRef<string[]>([]);
@@ -102,10 +107,6 @@ export function useTerminal({ containerRef, theme, webContainerInstance }: UseTe
   // Process references
   /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
   const currentProcess = useRef<any>(null); // WebContainerProcess type is complex/internal
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
 
   const writePrompt = useCallback(() => {
     if (terminalRef.current) {
@@ -180,7 +181,7 @@ export function useTerminal({ containerRef, theme, webContainerInstance }: UseTe
 
         // Show new prompt
         writePrompt();
-      } catch (error) {
+      } catch {
         if (terminalRef.current) {
           terminalRef.current.writeln(`\r\nCommand not found: ${command}`);
           writePrompt();
@@ -332,12 +333,11 @@ export function useTerminal({ containerRef, theme, webContainerInstance }: UseTe
     if (!webContainerInstance || !terminalRef.current) return;
 
     try {
-      setIsConnected(true);
       terminalRef.current.writeln("✅ Connected to WebContainer");
       terminalRef.current.writeln("Ready to execute commands");
       writePrompt();
+      hasShownConnectedMessage.current = true;
     } catch (error) {
-      setIsConnected(false);
       terminalRef.current.writeln("❌ Failed to connect to WebContainer");
       console.error("WebContainer connection error:", error);
     }
@@ -350,10 +350,16 @@ export function useTerminal({ containerRef, theme, webContainerInstance }: UseTe
   }, [isClient, initTerminal]);
 
   useEffect(() => {
-    if (webContainerInstance && terminalRef.current && !isConnected) {
+    if (webContainerInstance && terminalRef.current && !hasShownConnectedMessage.current) {
       connectToWebContainer();
     }
-  }, [webContainerInstance, connectToWebContainer, isConnected]);
+  }, [webContainerInstance, connectToWebContainer]);
+
+  useEffect(() => {
+    if (!webContainerInstance) {
+      hasShownConnectedMessage.current = false;
+    }
+  }, [webContainerInstance]);
 
   // Handle Resize
   useEffect(() => {
@@ -450,7 +456,6 @@ export function useTerminal({ containerRef, theme, webContainerInstance }: UseTe
 
 
   return {
-    terminalInstance: terminalRef.current,
     isConnected,
     isClient,
     clearTerminal,

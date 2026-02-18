@@ -336,9 +336,9 @@ export default function ProjectTable({ projects }: ProjectTableProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Project</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete "{selectedProject?.title}"? This
-              action cannot be undone. All files and data associated with this
-              project will be permanently removed.
+              Are you sure you want to delete this project? This action cannot
+              be undone. All files and data associated with this project will
+              be permanently removed.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

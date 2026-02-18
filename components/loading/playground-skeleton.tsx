@@ -2,6 +2,9 @@
 
 import { Skeleton } from "@/components/ui/skeleton";
 
+const FILE_TREE_LINE_WIDTHS = [65, 72, 84, 91, 68, 79, 88, 74];
+const EDITOR_LINE_WIDTHS = [95, 83, 76, 90, 66, 72, 87, 93, 71, 80, 62, 89];
+
 export function PlaygroundSkeleton() {
   return (
     <div 
@@ -13,10 +16,10 @@ export function PlaygroundSkeleton() {
       <div className="w-64 border-r bg-muted/30 p-4 space-y-3">
         <Skeleton className="h-6 w-32 mb-4" />
         <div className="space-y-2">
-          {[...Array(8)].map((_, i) => (
+          {FILE_TREE_LINE_WIDTHS.map((width, i) => (
             <div key={i} className="flex items-center gap-2">
               <Skeleton className="h-4 w-4" />
-              <Skeleton className="h-4 flex-1" style={{ width: `${60 + Math.random() * 40}%` }} />
+              <Skeleton className="h-4 flex-1" style={{ width: `${width}%` }} />
             </div>
           ))}
         </div>
@@ -58,11 +61,11 @@ export function PlaygroundSkeleton() {
               <Skeleton className="h-6 w-16" />
             </div>
             <div className="space-y-2">
-              {[...Array(12)].map((_, i) => (
+              {EDITOR_LINE_WIDTHS.map((width, i) => (
                 <Skeleton 
                   key={i} 
                   className="h-5" 
-                  style={{ width: `${50 + Math.random() * 50}%` }} 
+                  style={{ width: `${width}%` }}
                 />
               ))}
             </div>

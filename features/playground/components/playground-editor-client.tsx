@@ -34,20 +34,28 @@ const PlaygroundEditorClient: React.FC<PlaygroundEditorClientProps> = ({
 
   const handleContentChange = (value: string) => {
     setContent(value);
-    if (activeFile) {
-      activeFile.content = value;
-    }
+    setActiveFile((current) =>
+      current ? { ...current, content: value } : current
+    );
   };
 
-  const handleAcceptSuggestion = (_editor: MonacoEditorInstance, _monaco: MonacoNamespace) => {
+  const handleAcceptSuggestion = (
+    editor: MonacoEditorInstance,
+    monaco: MonacoNamespace
+  ) => {
+    void editor;
+    void monaco;
     setSuggestion(null);
   };
 
-  const handleRejectSuggestion = (_editor: MonacoEditorInstance) => {
+  const handleRejectSuggestion = (editor: MonacoEditorInstance) => {
+    void editor;
     setSuggestion(null);
   };
 
-  const handleTriggerSuggestion = (_type: string, _editor: MonacoEditorInstance) => {
+  const handleTriggerSuggestion = (type: string, editor: MonacoEditorInstance) => {
+    void type;
+    void editor;
     setSuggestionLoading(true);
     setTimeout(() => {
       setSuggestion("// Sample suggestion\n// Implement your logic here");

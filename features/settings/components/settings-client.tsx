@@ -27,7 +27,6 @@ import {
   Palette,
   Save,
   ArrowLeft,
-  Code,
   Loader2,
 } from "lucide-react";
 import {
@@ -36,7 +35,7 @@ import {
   defaultSettings,
   type UserSettings,
 } from "@/hooks/queries/use-settings";
-import { useState, useEffect } from "react";
+import { useMemo, useState } from "react";
 
 export function SettingsClient() {
   const router = useRouter();
@@ -45,31 +44,26 @@ export function SettingsClient() {
   const { data: settings, isLoading } = useSettingsQuery();
   const updateMutation = useUpdateSettingsMutation();
 
-  // Local state for form (synced with server data)
-  const [formData, setFormData] = useState<UserSettings>(defaultSettings);
-  const [hasChanges, setHasChanges] = useState(false);
-
-  // Sync form with fetched settings
-  useEffect(() => {
-    if (settings) {
-      setFormData(settings);
-      setHasChanges(false);
-    }
-  }, [settings]);
+  // Track only changed fields locally and derive full form data from server state.
+  const [draftChanges, setDraftChanges] = useState<Partial<UserSettings>>({});
+  const formData = useMemo<UserSettings>(
+    () => ({ ...(settings ?? defaultSettings), ...draftChanges }),
+    [settings, draftChanges]
+  );
+  const hasChanges = Object.keys(draftChanges).length > 0;
 
   // Update form field
   const updateField = <K extends keyof UserSettings>(
     key: K,
     value: UserSettings[K]
   ) => {
-    setFormData((prev) => ({ ...prev, [key]: value }));
-    setHasChanges(true);
+    setDraftChanges((prev) => ({ ...prev, [key]: value }));
   };
 
   const handleSave = () => {
     updateMutation.mutate(formData, {
       onSuccess: () => {
-        setHasChanges(false);
+        setDraftChanges({});
       },
     });
   };

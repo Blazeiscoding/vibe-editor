@@ -6,9 +6,10 @@ import type { TemplateFolder } from "@/features/playground/libs/path-to-json";
 import { transformToWebContainerFormat } from "../hooks/transformer";
 import { CheckCircle, Loader2, XCircle } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
-import { WebContainer } from "@webcontainer/api";
+import { WebContainer, type SpawnOptions } from "@webcontainer/api";
 import { TerminalSkeleton } from "@/components/loading/terminal-skeleton";
 import { loggers } from "@/lib/logger";
+import type { TerminalRef } from "./terminal";
 
 const log = loggers.webcontainer;
 
@@ -31,17 +32,11 @@ interface WebContainerPreviewProps {
   forceResetup?: boolean; // Optional prop to force re-setup
 }
 
-const WebContainerPreview: React.FC<WebContainerPreviewProps> = ({
-  templateData,
-  error,
-  instance,
-  isLoading,
-  serverUrl,
-  writeFileSync,
-  forceResetup = false,
-}) => {
+const WebContainerPreview: React.FC<WebContainerPreviewProps> = (props) => {
+  const { templateData, error, instance, isLoading, forceResetup = false } =
+    props;
   const [previewUrl, setPreviewUrl] = useState<string>("");
-  const [loadingState, setLoadingState] = useState({
+  const [, setLoadingState] = useState({
     transforming: false,
     mounting: false,
     installing: false,
@@ -55,8 +50,7 @@ const WebContainerPreview: React.FC<WebContainerPreviewProps> = ({
   const [isSetupInProgress, setIsSetupInProgress] = useState(false);
 
   // Ref to access terminal methods
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const terminalRef = useRef<any>(null);
+  const terminalRef = useRef<TerminalRef | null>(null);
 
   // Reset setup state when forceResetup changes
   useEffect(() => {
@@ -120,7 +114,7 @@ const WebContainerPreview: React.FC<WebContainerPreviewProps> = ({
             setLoadingState((prev) => ({ ...prev, starting: true }));
             return;
           }
-        } catch (e) {
+        } catch {
           // Files don't exist, proceed with normal setup
         }
 
@@ -228,7 +222,7 @@ const WebContainerPreview: React.FC<WebContainerPreviewProps> = ({
               ];
 
           const runInstall = async (args: string[]) => {
-            const proc = await instance.spawn("npm", args, {
+            const installSpawnOptions: SpawnOptions = {
               env: {
                 CI: "true",
                 NEXT_TELEMETRY_DISABLED: "1",
@@ -236,7 +230,11 @@ const WebContainerPreview: React.FC<WebContainerPreviewProps> = ({
                 npm_config_audit: "false",
                 npm_config_fund: "false",
               },
-            } as any);
+            };
+
+            const proc = await instance.spawn("npm", args, {
+              ...installSpawnOptions,
+            });
             proc.output.pipeTo(
               new WritableStream({
                 write(data) {
@@ -316,19 +314,17 @@ const WebContainerPreview: React.FC<WebContainerPreviewProps> = ({
           }
         } catch {}
 
-        const startProcess = await instance.spawn(
-          "npm",
-          ["run", scriptToRun, "--silent"],
-          {
-            env: {
-              PORT: "5173",
-              HOST: "0.0.0.0",
-              BROWSER: "none",
-              NEXT_TELEMETRY_DISABLED: "1",
-              CHOKIDAR_USEPOLLING: "false",
-            },
-          } as any
-        );
+        const startSpawnOptions: SpawnOptions = {
+          env: {
+            PORT: "5173",
+            HOST: "0.0.0.0",
+            BROWSER: "none",
+            NEXT_TELEMETRY_DISABLED: "1",
+            CHOKIDAR_USEPOLLING: "false",
+          },
+        };
+
+        const startProcess = await instance.spawn("npm", ["run", scriptToRun, "--silent"], startSpawnOptions);
 
         // Listen for server ready event
         instance.on("server-ready", (port: number, url: string) => {
