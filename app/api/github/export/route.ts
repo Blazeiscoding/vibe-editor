@@ -9,7 +9,7 @@ import {
   parseRepo,
 } from "@/lib/github";
 import { z } from "zod";
-import { validateRequestBody, idParamSchema, validateParams } from "@/lib/validations";
+import { validateRequestBody } from "@/lib/validations";
 import { headers } from "next/headers";
 import { NextRequest } from "next/server";
 import type { TemplateFolder } from "@/features/playground/types";

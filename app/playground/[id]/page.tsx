@@ -133,9 +133,7 @@ const MainPlaygroundPage: React.FC = () => {
     error: containerError,
     instance,
     writeFileSync,
-  } = useWebContainer({
-    templateData: templateData || { folderName: "", items: [] },
-  });
+  } = useWebContainer();
 
   const lastSyncedContent = useRef<Map<string, string>>(new Map());
 
@@ -161,14 +159,9 @@ const MainPlaygroundPage: React.FC = () => {
   // Create wrapper functions that pass saveTemplateData
   const wrappedHandleAddFile = useCallback(
     (newFile: TemplateFile, parentPath: string) => {
-      return handleAddFile(
-        newFile,
-        parentPath,
-        writeFileSync!,
-        instance
-      );
+      return handleAddFile(newFile, parentPath, writeFileSync!);
     },
-    [handleAddFile, writeFileSync, instance]
+    [handleAddFile, writeFileSync]
   );
 
   const wrappedHandleAddFolder = useCallback(

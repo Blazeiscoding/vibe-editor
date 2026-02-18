@@ -35,7 +35,7 @@ export const useAISuggestions = (): UseAISuggestionsReturn => {
   }, []);
 
   const fetchSuggestion = useCallback(async (type: string, editor: MonacoEditorInstance) => {
-    log.debug("Fetching AI suggestion", { isEnabled: state.isEnabled, hasEditor: !!editor });
+    log.debug("Fetching AI suggestion", { hasEditor: !!editor });
 
     // Use functional state update to get fresh state
     setState((currentState) => {

@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { loggers } from "@/lib/logger";
-import type { TemplateFile, TemplateFolder, TemplateItem } from "../types";
+import type { TemplateFolder, TemplateItem } from "../types";
 
 const log = loggers.fileExplorer;
 
@@ -222,7 +222,7 @@ export async function saveTemplateStructureToJson(
     await fs.promises.mkdir(outputDir, { recursive: true });
     
     // Write the JSON file
-    const data = await fs.promises.writeFile(
+    await fs.promises.writeFile(
       outputPath, 
       JSON.stringify(templateStructure, null, 2),
       'utf8'

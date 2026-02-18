@@ -7,15 +7,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
 import {
   Keyboard,
   Code,
-  Search,
   FileCode,
-  Settings,
   Plus,
-  Github,
 } from "lucide-react";
 
 interface KeyboardShortcutsProps {

@@ -69,6 +69,10 @@ export const useEditorSuggestions = ({
           context: InlineCompletionContext,
           token: { isCancellationRequested: boolean }
         ): Promise<InlineCompletionList> => {
+          void model;
+          void context;
+          void token;
+
           // Don't provide completions if we're currently accepting or have already accepted
           if (
             isAcceptingSuggestionRef.current ||
@@ -127,10 +131,10 @@ export const useEditorSuggestions = ({
             ],
           };
         },
-        freeInlineCompletions: (_completions: InlineCompletionList) => {
+        freeInlineCompletions: () => {
            // Cleanup if needed
         },
-        disposeInlineCompletions: (_completions: InlineCompletionList) => {
+        disposeInlineCompletions: () => {
            // Cleanup if needed
         },
       };
@@ -512,7 +516,6 @@ export const useEditorSuggestions = ({
 
     updateEditorLanguage();
   }, [
-    activeFile,
     updateEditorLanguage,
     clearCurrentSuggestion,
     hasActiveSuggestionAtPosition,

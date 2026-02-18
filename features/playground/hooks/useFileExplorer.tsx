@@ -29,8 +29,7 @@ interface FileExplorerState {
   handleAddFile: (
     newFile: TemplateFile,
     parentPath: string,
-    writeFileSync: (filePath: string, content: string) => Promise<void>,
-    instance: WebContainer | null
+    writeFileSync: (filePath: string, content: string) => Promise<void>
   ) => Promise<void>;
   handleAddFolder: (
     newFolder: TemplateFolder, 
@@ -138,7 +137,7 @@ export const useFileExplorer = create<FileExplorerState>((set, get) => ({
     });
   },
 
-  handleAddFile: async (newFile, parentPath, writeFileSync, instance) => {
+  handleAddFile: async (newFile, parentPath, writeFileSync) => {
     const { templateData, saveTemplateData } = get();
     if (!templateData || !saveTemplateData) return;
 

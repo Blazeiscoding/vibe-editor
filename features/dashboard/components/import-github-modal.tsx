@@ -50,7 +50,7 @@ export function ImportGithubModal({
   const isGitHubNotLinked =
     needsGitHubConnect || reposError?.message === "GITHUB_NOT_LINKED";
 
-  const repos = reposData?.repos ?? [];
+  const repos = useMemo(() => reposData?.repos ?? [], [reposData]);
 
   const sortedRepos = useMemo(() => {
     return repos.slice().sort((a, b) => a.full_name.localeCompare(b.full_name));
