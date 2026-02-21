@@ -47,9 +47,9 @@ import {
 import WebContainerPreview from "@/features/webcontainers/components/webcontainer-preview";
 
 import { PlaygroundEditor } from "@/features/playground/components/playground-editor";
-import { useFileExplorer } from "@/features/playground/hooks/useFileExplorer";
-import { usePlayground } from "@/features/playground/hooks/usePlayground";
-import { useAISuggestions } from "@/features/playground/hooks/useAISuggestion";
+import { useFileExplorer } from "@/features/playground/hooks/use-file-explorer";
+import { usePlayground } from "@/features/playground/hooks/use-playground";
+import { useAISuggestions } from "@/features/playground/hooks/use-ai-suggestion";
 import { useWebContainer } from "@/features/webcontainers/hooks/useWebContainer";
 import { SaveUpdatedCode } from "@/features/playground/actions";
 import { TemplateFile, TemplateFolder, TemplateItem } from "@/features/playground/types";

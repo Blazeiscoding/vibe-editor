@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 import type { TemplateFolder } from "@/features/playground/types";
 import type { WebContainer } from "@webcontainer/api";
-import { usePackageManager } from "../hooks/usePackageManager";
+import { usePackageManager } from "../hooks/use-package-manager";
 
 interface PackageManagerModalProps {
   open: boolean;

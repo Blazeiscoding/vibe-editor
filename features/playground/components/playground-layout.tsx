@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 
 import PlaygroundEditorClient from "./playground-editor-client";
 import { PlaygroundHeader } from "./playground-header";
-import { usePlayground } from "../hooks/usePlayground";
+import { usePlayground } from "../hooks/use-playground";
 import { LoadingStep } from "./loadingStep";
 
 export function PlaygroundLayout() {
